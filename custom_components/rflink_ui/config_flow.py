@@ -182,11 +182,11 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_switches = self.options.get("switches", {})
         configured_sensors = self.options.get("sensors", {})
 
-        all_devices = []
-        for dev_id in configured_switches:
-            all_devices.append(f"[Interrupteur] {dev_id}")
-        for dev_id in configured_sensors:
-            all_devices.append(f"[Capteur] {dev_id}")
+        all_devices = {}
+        for dev_id, name in configured_switches.items():
+            all_devices[f"[Interrupteur] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, name in configured_sensors.items():
+            all_devices[f"[Capteur] {dev_id}"] = f"{name} ({dev_id})"
 
         if not all_devices:
             return self.async_abort(reason="no_configured_devices")
@@ -271,11 +271,11 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_switches = self.options.get("switches", {})
         configured_sensors = self.options.get("sensors", {})
 
-        all_devices = []
-        for dev_id in configured_switches:
-            all_devices.append(f"[Interrupteur] {dev_id}")
-        for dev_id in configured_sensors:
-            all_devices.append(f"[Capteur] {dev_id}")
+        all_devices = {}
+        for dev_id, name in configured_switches.items():
+            all_devices[f"[Interrupteur] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, name in configured_sensors.items():
+            all_devices[f"[Capteur] {dev_id}"] = f"{name} ({dev_id})"
 
         if not all_devices:
             return self.async_abort(reason="no_configured_devices")

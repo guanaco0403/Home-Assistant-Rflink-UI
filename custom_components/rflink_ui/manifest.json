@@ -8,7 +8,7 @@
   "dependencies": [
     "radio_frequency"
   ],
-  "documentation": "CHANGE ME",
+  "documentation": "https://github.com/guanaco0403/Home-Assistant-Rflink-UI",
   "iot_class": "local_push",
   "requirements": [
     "pyserial-asyncio-fast>=0.11",

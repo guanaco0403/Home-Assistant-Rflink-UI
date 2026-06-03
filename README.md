@@ -32,10 +32,10 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 ## 📦 Installation
 
 ### Option 1: HACS (Recommended for Users)
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=Rflink-Ha-Modern&owner=guanaco0403&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?repository=Home-Assistant-Rflink-UI&owner=guanaco0403&category=integration)
 
 1. Go to **HACS > Integrations > Custom repositories**
-2. Add this repo URL: `https://github.com/guanaco0403/Rflink-Ha-Modern`
+2. Add this repo URL: `https://github.com/guanaco0403/Home-Assistant-Rflink-UI`
 3. Select category: **Integration**
 4. Click **Add**
 5. Install the `RFLink UI` integration

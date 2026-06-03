@@ -190,17 +190,21 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
 
         if not all_devices:
             return self.async_abort(reason="no_configured_devices")
-        
+
         errors = {}
 
         if user_input is not None:
             selection = user_input["device_id"]
             new_dev_id = user_input["new_device_id"]
-            
-            from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+            from homeassistant.helpers import (
+                device_registry as dr,
+                entity_registry as er,
+            )
+
             dev_reg = dr.async_get(self.hass)
             ent_reg = er.async_get(self.hass)
-            
+
             device_type = None
             if selection.startswith("[Interrupteur] "):
                 old_dev_id = selection.replace("[Interrupteur] ", "")
@@ -219,23 +223,33 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 # update device registry
                 dev_entry = dev_reg.async_get_device(identifiers={(DOMAIN, old_dev_id)})
                 if dev_entry:
-                    dev_reg.async_update_device(dev_entry.id, new_identifiers={(DOMAIN, new_dev_id)})
-                
+                    dev_reg.async_update_device(
+                        dev_entry.id, new_identifiers={(DOMAIN, new_dev_id)}
+                    )
+
                 # update entity registry
                 if device_type == "switch":
                     old_unique_id = f"rflink_switch_{old_dev_id}"
                     new_unique_id = f"rflink_switch_{new_dev_id}"
-                    ent_entry = ent_reg.async_get_entity_id("switch", DOMAIN, old_unique_id)
+                    ent_entry = ent_reg.async_get_entity_id(
+                        "switch", DOMAIN, old_unique_id
+                    )
                     if ent_entry:
-                        ent_reg.async_update_entity(ent_entry, new_unique_id=new_unique_id)
+                        ent_reg.async_update_entity(
+                            ent_entry, new_unique_id=new_unique_id
+                        )
                 else:
                     # For sensors, there are usually two: temperature and humidity
                     for s_type in ["temperature", "humidity"]:
                         old_unique_id = f"rflink_sensor_{s_type}_{old_dev_id}"
                         new_unique_id = f"rflink_sensor_{s_type}_{new_dev_id}"
-                        ent_entry = ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+                        ent_entry = ent_reg.async_get_entity_id(
+                            "sensor", DOMAIN, old_unique_id
+                        )
                         if ent_entry:
-                            ent_reg.async_update_entity(ent_entry, new_unique_id=new_unique_id)
+                            ent_reg.async_update_entity(
+                                ent_entry, new_unique_id=new_unique_id
+                            )
 
             return self.async_create_entry(title="", data=self.options)
 

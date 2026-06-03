@@ -1,0 +1,38 @@
+name: Run multiple checks
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./scripts/requirements_github_workflow.txt
+
+      - name: Run Ruff linter checks
+        run: ruff check ./custom_components/
+
+      - name: Run Codespell checks
+        run: codespell custom_components/ -I .codespellignore
+
+      - name: Run Python code style with Black checks
+        run: black --check ./custom_components/

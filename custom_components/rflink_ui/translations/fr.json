@@ -1,0 +1,41 @@
+{
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gérer les appareils RFLink",
+        "menu_options": {
+          "add_learned": "Ajouter un appareil détecté",
+          "add_manual": "Ajouter un appareil manuellement",
+          "remove": "Supprimer un appareil"
+        }
+      },
+      "add_learned": {
+        "title": "Appareils récemment détectés",
+        "description": "Appuyez sur votre télécommande. Si rien n'apparaît, sélectionnez 'Actualiser' et validez.\n\nAttention: L'interface ne se met pas à jour toute seule, vous devez cliquer sur 'Actualiser'.",
+        "data": {
+          "device_id": "Sélectionnez l'appareil (ou une action)",
+          "name": "Nom de l'appareil (ex: Température Extérieure)"
+        }
+      },
+      "add_manual": {
+        "title": "Ajouter manuellement",
+        "data": {
+          "device_type": "Type d'appareil",
+          "device_id": "Identifiant RFLink (ex: Unitec_1a4a_4)",
+          "name": "Nom de l'appareil"
+        }
+      },
+      "remove": {
+        "title": "Supprimer un appareil",
+        "data": {
+          "device_id": "Appareil"
+        }
+      }
+    },
+    "error": {
+      "no_devices_found": "Aucun signal RFLink inconnu récent n'a été détecté. Appuyez sur votre télécommande et réessayez.",
+      "no_configured_devices": "Aucun appareil n'est configuré.",
+      "cannot_connect": "Impossible de se connecter au port série"
+    }
+  }
+}

@@ -32,7 +32,7 @@ jobs:
         run: ruff check ./custom_components/
 
       - name: Run Codespell checks
-        run: codespell custom_components/ --skip=./custom_components/rflink_ui/translations -I .codespellignore
+        run: codespell custom_components/ --skip=custom_components/rflink_ui/translations -I .codespellignore
 
       - name: Run Python code style with Black checks
         run: black --check ./custom_components/

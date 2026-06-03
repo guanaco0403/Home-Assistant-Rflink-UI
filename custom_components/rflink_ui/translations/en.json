@@ -6,6 +6,7 @@
         "menu_options": {
           "add_learned": "Add recently detected device (Learning mode)",
           "add_manual": "Add device manually",
+          "modify": "Modify a device ID",
           "remove": "Remove device"
         }
       },
@@ -23,6 +24,13 @@
           "device_type": "Device Type",
           "device_id": "RFLink ID (e.g. Unitec_1a4a_4)",
           "name": "Device Name"
+        }
+      },
+      "modify": {
+        "title": "Modify Device ID",
+        "data": {
+          "device_id": "Device to modify",
+          "new_device_id": "New RFLink ID (e.g. Unitec_1a4a_4)"
         }
       },
       "remove": {

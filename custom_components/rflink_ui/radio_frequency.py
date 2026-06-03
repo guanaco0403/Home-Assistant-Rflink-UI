@@ -19,6 +19,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -38,6 +39,7 @@ async def async_setup_entry(
         },
         "async_send_rf_command",
     )
+
 
 class RFLinkTransmitterDevice(RadioFrequencyEntity):
     """RFLink Transmitter Entity."""
@@ -64,11 +66,13 @@ class RFLinkTransmitterDevice(RadioFrequencyEntity):
         """Return the list of supported frequencies in MHz."""
         return self._attr_supported_frequencies
 
-    async def async_send_rf_command(self, protocol: str, command: str, **kwargs: Any) -> None:
+    async def async_send_rf_command(
+        self, protocol: str, command: str, **kwargs: Any
+    ) -> None:
         """Send an RF command via RFLink."""
         # RFLink serial syntax: "10;{protocol};{command};\n"
         rflink_command = f"10;{protocol};{command};\n"
-        
+
         try:
             await self._data.async_send_command(rflink_command)
         except Exception as err:

@@ -1,4 +1,5 @@
 """Switch platform for RFLink UI."""
+
 from typing import Any
 import logging
 
@@ -13,6 +14,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -20,12 +22,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the RFLink switch platform."""
     switches = entry.options.get("switches", {})
-    
+
     entities = []
     for device_id, name in switches.items():
         entities.append(RFLinkSwitch(entry.entry_id, device_id, name))
 
     async_add_entities(entities)
+
 
 class RFLinkSwitch(SwitchEntity):
     """Representation of an RFLink switch."""
@@ -77,12 +80,12 @@ class RFLinkSwitch(SwitchEntity):
         """Handle updated data from RFLink."""
         cmd = data_dict.get("CMD", "")
         _LOGGER.debug("Switch %s received update: %s", self._device_id, cmd)
-        
+
         if cmd.upper() in ["ON", "ALLON"]:
             self._attr_is_on = True
         elif cmd.upper() in ["OFF", "ALLOFF"]:
             self._attr_is_on = False
-            
+
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -90,10 +93,10 @@ class RFLinkSwitch(SwitchEntity):
         data = self.hass.data.get(DOMAIN, {}).get(self._entry_id)
         if not data:
             return
-            
+
         # Standard syntax: 10;Protocol;ID;Switch;ON;\n
         command = f"10;{self._protocol};{self._rflink_id};{self._rflink_switch};ON;\n"
-        
+
         try:
             await data.async_send_command(command)
             self._attr_is_on = True
@@ -106,9 +109,9 @@ class RFLinkSwitch(SwitchEntity):
         data = self.hass.data.get(DOMAIN, {}).get(self._entry_id)
         if not data:
             return
-            
+
         command = f"10;{self._protocol};{self._rflink_id};{self._rflink_switch};OFF;\n"
-        
+
         try:
             await data.async_send_command(command)
             self._attr_is_on = False

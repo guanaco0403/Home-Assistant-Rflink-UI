@@ -1,8 +1,11 @@
 """Binary sensor platform for RFLink UI connection status."""
-import logging
-from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+import logging
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,14 +16,18 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the RFLink binary sensor platform."""
-    entities = [RFLinkConnectionSensor(entry.entry_id, entry.data.get("port", "RFLink"))]
+    entities = [
+        RFLinkConnectionSensor(entry.entry_id, entry.data.get("port", "RFLink"))
+    ]
     async_add_entities(entities)
+
 
 class RFLinkConnectionSensor(BinarySensorEntity):
     """Representation of an RFLink connection status sensor."""

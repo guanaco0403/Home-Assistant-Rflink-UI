@@ -79,7 +79,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["add_learned", "add_manual", "remove"],
+            menu_options=["add_learned", "add_manual", "modify", "remove"],
         )
 
     async def async_step_add_learned(
@@ -173,6 +173,81 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required("name"): str,
                 }
             ),
+        )
+
+    async def async_step_modify(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Modify a device ID."""
+        configured_switches = self.options.get("switches", {})
+        configured_sensors = self.options.get("sensors", {})
+
+        all_devices = []
+        for dev_id in configured_switches:
+            all_devices.append(f"[Interrupteur] {dev_id}")
+        for dev_id in configured_sensors:
+            all_devices.append(f"[Capteur] {dev_id}")
+
+        if not all_devices:
+            return self.async_abort(reason="no_configured_devices")
+        
+        errors = {}
+
+        if user_input is not None:
+            selection = user_input["device_id"]
+            new_dev_id = user_input["new_device_id"]
+            
+            from homeassistant.helpers import device_registry as dr, entity_registry as er
+            dev_reg = dr.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            
+            device_type = None
+            if selection.startswith("[Interrupteur] "):
+                old_dev_id = selection.replace("[Interrupteur] ", "")
+                name = self.options["switches"].pop(old_dev_id, None)
+                if name:
+                    self.options["switches"][new_dev_id] = name
+                    device_type = "switch"
+            elif selection.startswith("[Capteur] "):
+                old_dev_id = selection.replace("[Capteur] ", "")
+                name = self.options["sensors"].pop(old_dev_id, None)
+                if name:
+                    self.options["sensors"][new_dev_id] = name
+                    device_type = "sensor"
+
+            if device_type:
+                # update device registry
+                dev_entry = dev_reg.async_get_device(identifiers={(DOMAIN, old_dev_id)})
+                if dev_entry:
+                    dev_reg.async_update_device(dev_entry.id, new_identifiers={(DOMAIN, new_dev_id)})
+                
+                # update entity registry
+                if device_type == "switch":
+                    old_unique_id = f"rflink_switch_{old_dev_id}"
+                    new_unique_id = f"rflink_switch_{new_dev_id}"
+                    ent_entry = ent_reg.async_get_entity_id("switch", DOMAIN, old_unique_id)
+                    if ent_entry:
+                        ent_reg.async_update_entity(ent_entry, new_unique_id=new_unique_id)
+                else:
+                    # For sensors, there are usually two: temperature and humidity
+                    for s_type in ["temperature", "humidity"]:
+                        old_unique_id = f"rflink_sensor_{s_type}_{old_dev_id}"
+                        new_unique_id = f"rflink_sensor_{s_type}_{new_dev_id}"
+                        ent_entry = ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+                        if ent_entry:
+                            ent_reg.async_update_entity(ent_entry, new_unique_id=new_unique_id)
+
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="modify",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("device_id"): vol.In(all_devices),
+                    vol.Required("new_device_id"): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_remove(

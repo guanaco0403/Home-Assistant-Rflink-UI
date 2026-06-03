@@ -6,6 +6,7 @@
         "menu_options": {
           "add_learned": "Ajouter un appareil détecté",
           "add_manual": "Ajouter un appareil manuellement",
+          "modify": "Modifier l'ID d'un appareil",
           "remove": "Supprimer un appareil"
         }
       },
@@ -23,6 +24,13 @@
           "device_type": "Type d'appareil",
           "device_id": "Identifiant RFLink (ex: Unitec_1a4a_4)",
           "name": "Nom de l'appareil"
+        }
+      },
+      "modify": {
+        "title": "Modifier l'ID d'un appareil",
+        "data": {
+          "device_id": "Appareil à modifier",
+          "new_device_id": "Nouvel identifiant RFLink (ex: Unitec_1a4a_4)"
         }
       },
       "remove": {

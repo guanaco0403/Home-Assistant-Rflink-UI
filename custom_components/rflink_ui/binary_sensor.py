@@ -39,7 +39,7 @@ class RFLinkConnectionSensor(BinarySensorEntity):
     def __init__(self, entry_id: str, port: str) -> None:
         """Initialize the connection sensor."""
         self._entry_id = entry_id
-        self._attr_name = "Statut de connexion"
+        self._attr_name = "Connection status"
         self._attr_unique_id = f"rflink_connection_{port}"
         self._attr_is_on = False
         self._port = port

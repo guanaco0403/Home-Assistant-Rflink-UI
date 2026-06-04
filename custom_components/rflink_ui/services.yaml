@@ -1,0 +1,21 @@
+send_command:
+  name: Send RF command
+  description: Sends a raw RF command via the RFLink transmitter.
+  target:
+    entity:
+      integration: rflink_ui
+  fields:
+    protocol:
+      name: Protocol
+      description: The RF protocol to use (e.g., Kaku, Cresta).
+      required: true
+      example: Kaku
+      selector:
+        text:
+    command:
+      name: Command
+      description: The command payload to send.
+      required: true
+      example: 1;ON
+      selector:
+        text:

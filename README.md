@@ -84,7 +84,7 @@ data:
 
 ## 🧪 Requirements
 
-- Home Assistant 2025.5.4 or newer
+- Home Assistant 2026.5.4 or newer
 - Python 3.12+
 - pyserial-asyncio-fast>=0.11 (automatically installed)
 

@@ -133,3 +133,65 @@ This project is licensed under the MIT License.
 ## 📢 Contribute
 
 Pull requests are welcome! If you want to improve signal parsing, add support for more sensor types (like wind/rain), or enhance the config flow — contributions are greatly appreciated.
+
+## 🧪 Testing & Development
+
+This repository includes a dedicated test runner (`scripts/test_runner.py`) that automatically sets up an isolated virtual environment (`.venv_ha_test`), installs the specified Home Assistant version, and configures dependencies.
+
+### Running the Test Runner
+
+* **Run Automated Tests** (default action)
+  ```bash
+  # Standard command
+  python3.14 scripts/test_runner.py
+
+  # On Windows (using the Python Launcher)
+  py -3.14 scripts/test_runner.py
+  ```
+
+* **Run Live Local Home Assistant** (runs a local HA instance preloaded with the integration)
+  ```bash
+  # Standard command
+  python3.14 scripts/test_runner.py --run
+
+  # On Windows (using the Python Launcher)
+  py -3.14 scripts/test_runner.py --run
+  ```
+  Once the server starts, navigate to `http://localhost:8123` in your browser.
+
+### Advanced Options
+
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `-v`, `--version` | Target Home Assistant version (or `"latest"`) | `2026.5.0` |
+| `--port` | Port to run the live Home Assistant instance on | `8123` |
+| `--clean` | Force re-creation of the virtual environment | |
+
+*Example (testing a different HA version):*
+```bash
+py -3.14 scripts/test_runner.py --version 2026.6.0
+```
+
+### Code Style & Linting
+
+We use [Ruff](https://beta.ruff.rs/docs/) and [Black](https://github.com/psf/black) to enforce style consistency and linting checks.
+
+* **Lint Checks (Ruff)**
+  ```bash
+  # Check for issues
+  ruff check custom_components/
+
+  # Auto-fix fixable issues
+  ruff check custom_components/ --fix
+  ```
+
+* **Code Formatting (Black)**
+  ```bash
+  # Check formatting
+  black --check custom_components/
+
+  # Auto-format files
+  black custom_components/
+  ```
+
+

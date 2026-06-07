@@ -42,7 +42,8 @@ class RFLinkSwitch(SwitchEntity, RestoreEntity):
         """Initialize the switch."""
         self._entry_id = entry_id
         self._device_id = device_id
-        self._attr_name = name
+        self._device_name = name
+        self._attr_name = None
         self._attr_unique_id = f"rflink_switch_{device_id}"
         self._attr_is_on = False
 
@@ -62,7 +63,7 @@ class RFLinkSwitch(SwitchEntity, RestoreEntity):
         """Return device information about this RFLink device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self._attr_name,
+            name=self._device_name,
             manufacturer="RFLink",
             model=self._protocol,
         )

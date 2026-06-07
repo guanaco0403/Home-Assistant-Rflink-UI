@@ -11,6 +11,12 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 
 ---
 
+📋 Supported Devices
+The RFLink UI integration supports a wide range of 433MHz devices. Because RFLink acts as a universal bridge, if your device uses a protocol supported by the RFLink firmware, it will likely work with this integration.
+BUT, the only devices i implemented are:
+- Switch
+- Sensor (like temperature and humidity)
+
 ## ✨ Features
 
 - 📡 **Connects to any standard Arduino RFLink gateway** via USB/Serial

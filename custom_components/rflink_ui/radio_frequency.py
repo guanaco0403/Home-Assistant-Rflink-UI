@@ -111,4 +111,3 @@ class RFLinkTransmitterDevice(RadioFrequencyEntity):
         except Exception as err:
             _LOGGER.error("Failed to send RF command: %s", err)
             raise
-

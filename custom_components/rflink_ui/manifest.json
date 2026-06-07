@@ -5,7 +5,7 @@
     "@guanaco0403"
   ],
   "config_flow": true,
-  "dependencies": [
+  "after_dependencies": [
     "radio_frequency"
   ],
   "documentation": "https://github.com/guanaco0403/Home-Assistant-Rflink-UI",

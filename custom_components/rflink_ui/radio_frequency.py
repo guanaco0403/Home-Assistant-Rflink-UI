@@ -6,11 +6,15 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
 try:
-    from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity as RadioFrequencyEntity
+    from homeassistant.components.radio_frequency import (
+        RadioFrequencyTransmitterEntity as RadioFrequencyEntity,
+    )
+
     HAS_RF = True
 except ImportError:
     # Fallback for HA versions before 2026.5
     from homeassistant.helpers.entity import Entity as RadioFrequencyEntity
+
     HAS_RF = False
 
 from homeassistant.config_entries import ConfigEntry
@@ -76,6 +80,7 @@ class RFLinkTransmitterDevice(RadioFrequencyEntity):
         }
 
     if HAS_RF:
+
         @property
         def supported_frequency_ranges(self) -> list[tuple[int, int]]:
             """Return list of (min_hz, max_hz) tuples."""

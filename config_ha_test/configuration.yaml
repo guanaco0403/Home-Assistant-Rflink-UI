@@ -1,0 +1,8 @@
+# Home Assistant Testing Configuration
+default_config:
+http:
+  server_port: 8123
+logger:
+  default: info
+  logs:
+    custom_components.rflink_ui: debug

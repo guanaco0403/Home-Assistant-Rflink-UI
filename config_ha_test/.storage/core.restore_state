@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "core.restore_state",
+  "data": [
+    {
+      "state": {"entity_id":"conversation.home_assistant","state":"unknown","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2026-06-07T18:26:42.841256+00:00","last_reported":"2026-06-07T18:26:42.841256+00:00","last_updated":"2026-06-07T18:26:42.841256+00:00","context":{"id":"01KTHNCKGSZ0P78BT4D909Y84A","parent_id":null,"user_id":null}},
+      "extra_data": null,
+      "last_seen": "2026-06-07T18:27:01.921398+00:00"
+    },
+    {
+      "state": {"entity_id":"event.backup_automatic_backup","state":"unknown","attributes":{"event_types":["completed","failed","in_progress"],"event_type":null,"friendly_name":"Backup Automatic backup"},"last_changed":"2026-06-07T18:26:42.873986+00:00","last_reported":"2026-06-07T18:26:42.873986+00:00","last_updated":"2026-06-07T18:26:42.873986+00:00","context":{"id":"01KTHNCKHS4NBQCYANVG0D08VG","parent_id":null,"user_id":null}},
+      "extra_data": {
+        "last_event_type": null,
+        "last_event_attributes": null
+      },
+      "last_seen": "2026-06-07T18:27:01.921398+00:00"
+    },
+    {
+      "state": {"entity_id":"person.test","state":"unknown","attributes":{"editable":true,"id":"test","device_trackers":[],"in_zones":[],"source":"person.test","user_id":"0a7ffeca814f40efb9e2bf486cc198ec","friendly_name":"test"},"last_changed":"2026-06-07T18:27:01.084067+00:00","last_reported":"2026-06-07T18:27:01.084067+00:00","last_updated":"2026-06-07T18:27:01.084067+00:00","context":{"id":"01KTHND5AWHP9QN3TQEY07XPDP","parent_id":null,"user_id":null}},
+      "extra_data": null,
+      "last_seen": "2026-06-07T18:27:01.921398+00:00"
+    }
+  ]
+}

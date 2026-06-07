@@ -56,3 +56,13 @@ async def test_radio_frequency_transmitter(hass, mock_serial_connection):
     # Which translates to: 10;Kaku;0000abc;1;ON;\n
     writer = mock_serial_connection["writer"]
     assert b"10;Kaku;0000abc;1;ON;\n" in writer.written
+
+    # Check that the state is updated
+    updated_state = hass.states.get(state.entity_id)
+    assert updated_state is not None
+    if updated_state.entity_id.startswith("radio_frequency."):
+        assert updated_state.state != "unknown"
+        assert "T" in updated_state.state  # Check for ISO timestamp format
+    else:
+        assert updated_state.state == "ready"
+

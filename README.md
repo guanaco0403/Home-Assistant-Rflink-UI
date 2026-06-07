@@ -73,16 +73,16 @@ Once configured, click **Configure** on the integration card to:
 
 ---
 
-## 🛠 Service: `radio_frequency.send_command`
+## 🛠 Action: `rflink_ui.send_command`
 
 You can manually send any raw RF command through the gateway.
 
 ### Example:
 
 ```yaml
-service: radio_frequency.send_command
+action: rflink_ui.send_command
 target:
-  entity_id: radio_frequency.transmitter
+  entity_id: radio_frequency.rflink_com3_transmitter  # Replace with your actual transmitter entity ID (e.g. rflink_dev_ttyusb0_transmitter)
 data:
   protocol: "Unitec"
   command: "1a4a;4;ON"

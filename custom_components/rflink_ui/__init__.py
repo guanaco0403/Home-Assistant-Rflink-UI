@@ -76,7 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        if ent.unique_id.startswith("rflink_connection_") or ent.unique_id.endswith("_rf_transmitter"):
+        if ent.unique_id.startswith("rflink_connection_") or ent.unique_id.endswith(
+            "_rf_transmitter"
+        ):
             continue
         is_active = any(ent.unique_id.endswith(active) for active in active_devices)
         if not is_active:
@@ -85,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for dev in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         is_active = False
         for identifier in dev.identifiers:
-            if identifier[0] == DOMAIN and (identifier[1] in active_devices or identifier[1] == entry.entry_id):
+            if identifier[0] == DOMAIN and (
+                identifier[1] in active_devices or identifier[1] == entry.entry_id
+            ):
                 is_active = True
                 break
         if not is_active:

@@ -4,6 +4,8 @@ from typing import Any
 
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt as dt_util
+
 
 try:
     from homeassistant.components.radio_frequency import (
@@ -99,6 +101,13 @@ class RFLinkTransmitterDevice(RadioFrequencyEntity):
 
         try:
             await self._data.async_send_command(rflink_command)
+            if HAS_RF:
+                self._RadioFrequencyTransmitterEntity__last_command_sent = (
+                    dt_util.utcnow().isoformat(timespec="milliseconds")
+                )
+            else:
+                self._attr_state = "ready"
+            self.async_write_ha_state()
         except Exception as err:
             _LOGGER.error("Failed to send RF command: %s", err)
             raise

@@ -5,10 +5,12 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 
@@ -30,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RFLinkSwitch(SwitchEntity):
+class RFLinkSwitch(SwitchEntity, RestoreEntity):
     """Representation of an RFLink switch."""
 
     _attr_has_entity_name = True
@@ -67,6 +69,11 @@ class RFLinkSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        if (state := await self.async_get_last_state()) is not None:
+            self._attr_is_on = state.state == STATE_ON
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

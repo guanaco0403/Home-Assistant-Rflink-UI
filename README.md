@@ -133,3 +133,9 @@ This project is licensed under the MIT License.
 ## 📢 Contribute
 
 Pull requests are welcome! If you want to improve signal parsing, add support for more sensor types (like wind/rain), or enhance the config flow — contributions are greatly appreciated.
+
+
+py -3.14 scripts/test_runner.py --test --version 2026.5.0
+
+py -3.14 scripts/test_runner.py --test --version 2026.5.0
+

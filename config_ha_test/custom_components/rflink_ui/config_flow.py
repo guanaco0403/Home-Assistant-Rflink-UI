@@ -239,8 +239,8 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                             ent_entry, new_unique_id=new_unique_id
                         )
                 else:
-                    # For sensors, there are usually two: temperature and humidity
-                    for s_type in ["temperature", "humidity"]:
+                    # For sensors, there are usually three: temperature, humidity and battery
+                    for s_type in ["temperature", "humidity", "battery"]:
                         old_unique_id = f"rflink_sensor_{s_type}_{old_dev_id}"
                         new_unique_id = f"rflink_sensor_{s_type}_{new_dev_id}"
                         ent_entry = ent_reg.async_get_entity_id(

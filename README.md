@@ -88,6 +88,18 @@ data:
   command: "1a4a;4;ON"
 ```
 
+## 🛠 Action: `rflink_ui.simulate_packet`
+
+You can simulate receiving a raw RFLink packet string in the integration. This is highly useful for testing or auto-discovering devices without physical hardware.
+
+### Example:
+
+```yaml
+action: rflink_ui.simulate_packet
+data:
+  packet: "20;01;Kaku;ID=1234abcd;SWITCH=1;CMD=ON;"
+```
+
 ## 🧪 Requirements
 
 - Home Assistant 2026.5.4 or newer

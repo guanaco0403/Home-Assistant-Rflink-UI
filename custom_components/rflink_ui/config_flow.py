@@ -168,10 +168,10 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             name = user_input["name"]
             dev_type = user_input["device_type"]
 
-            if dev_type in ["Switch", "Interrupteur"]:
+            if dev_type == "Switch":
                 self.options["switches"][dev_id] = name
                 return self.async_create_entry(title="", data=self.options)
-            elif dev_type in ["Binary Sensor", "Capteur binaire"]:
+            elif dev_type == "Binary Sensor":
                 self._temp_device_id = dev_id
                 self._temp_name = name
                 return await self.async_step_binary_sensor_options()
@@ -184,7 +184,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required("device_type", default="Switch"): vol.In(
-                        ["Switch", "Sensor", "Binary Sensor", "Interrupteur", "Capteur", "Capteur binaire"]
+                        ["Switch", "Sensor", "Binary Sensor"]
                     ),
                     vol.Required("device_id"): str,
                     vol.Required("name"): str,

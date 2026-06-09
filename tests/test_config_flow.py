@@ -109,7 +109,7 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Interrupteur] Kaku_learned_1",
+            "device_id": "[Switch] Kaku_learned_1",
             "name": "Learned Switch",
         },
     )
@@ -142,7 +142,7 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Interrupteur] Kaku_old_1",
+            "device_id": "[Switch] Kaku_old_1",
             "new_device_id": "Kaku_new_1",
         },
     )
@@ -163,7 +163,7 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Capteur] Oregon_old_2",
+            "device_id": "[Sensor] Oregon_old_2",
         },
     )
     assert result["type"] == "create_entry"

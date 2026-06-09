@@ -71,8 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
 
-    active_devices = set(entry.options.get("switches", {}).keys()) | set(
-        entry.options.get("sensors", {}).keys()
+    active_devices = (
+        set(entry.options.get("switches", {}).keys())
+        | set(entry.options.get("sensors", {}).keys())
+        | set(entry.options.get("binary_sensors", {}).keys())
     )
 
     for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
@@ -97,6 +99,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    # Register service to simulate receiving a packet
+    async def async_simulate_packet(call) -> None:
+        """Service handler to simulate receiving an RFLink packet."""
+        packet = call.data.get("packet")
+        if packet:
+            _process_packet(hass, entry.entry_id, packet)
+
+    hass.services.async_register(DOMAIN, "simulate_packet", async_simulate_packet)
 
     return True
 
@@ -174,6 +185,57 @@ async def _async_keep_alive(hass: HomeAssistant, entry_id: str) -> None:
             break
 
 
+def _process_packet(hass: HomeAssistant, entry_id: str, decoded_line: str) -> None:
+    """Process an RFLink packet line and dispatch updates."""
+    # Example RFLink message: 20;01;Kaku;ID=41;SWITCH=1;CMD=ON;
+    # Example RFLink sensor: 20;3A;Oregon TempHygro;ID=0A4C;TEMP=00ba;HUM=40;BAT=OK;
+    parts = decoded_line.split(";")
+    if len(parts) >= 4 and parts[0] == "20":
+        protocol = parts[2]
+
+        data_dict = {}
+        for part in parts[3:]:
+            if "=" in part:
+                k, v = part.split("=", 1)
+                data_dict[k] = v
+
+        device_id = data_dict.get("ID")
+        if not protocol or not device_id:
+            return
+
+        if "CMD" in data_dict:
+            # It's a switch
+            switch = data_dict.get("SWITCH", "0")
+            full_device_id = f"{protocol}_{device_id}_{switch}"
+            device_type = "switch"
+        else:
+            # It's a sensor
+            full_device_id = f"{protocol}_{device_id}"
+            device_type = "sensor"
+
+        _LOGGER.info(
+            "RFLink dispatcher sending to 'rflink_update_%s' with data: %s",
+            full_device_id,
+            data_dict,
+        )
+
+        # Broadcast state change (sending the full dictionary)
+        async_dispatcher_send(hass, f"rflink_update_{full_device_id}", data_dict)
+
+        # Add to recent unknown devices buffer for UI learning
+        data = hass.data[DOMAIN].get(entry_id)
+        if data:
+            buffer = data.recent_unknown_devices
+            recent_dict = dict(buffer)
+
+            # Remove it if it exists so it moves to the end of the dict (most recent)
+            if full_device_id in recent_dict:
+                del recent_dict[full_device_id]
+
+            recent_dict[full_device_id] = {"type": device_type, "data": data_dict}
+            data.recent_unknown_devices = deque(recent_dict.items(), maxlen=50)
+
+
 async def _async_read_serial(
     hass: HomeAssistant, entry_id: str, reader: asyncio.StreamReader
 ) -> None:
@@ -193,54 +255,7 @@ async def _async_read_serial(
             continue
 
         _LOGGER.debug("Received RFLink data: %s", decoded_line)
-
-        # Example RFLink message: 20;01;Kaku;ID=41;SWITCH=1;CMD=ON;
-        # Example RFLink sensor: 20;3A;Oregon TempHygro;ID=0A4C;TEMP=00ba;HUM=40;BAT=OK;
-        parts = decoded_line.split(";")
-        if len(parts) >= 4 and parts[0] == "20":
-            protocol = parts[2]
-
-            data_dict = {}
-            for part in parts[3:]:
-                if "=" in part:
-                    k, v = part.split("=", 1)
-                    data_dict[k] = v
-
-            device_id = data_dict.get("ID")
-            if not protocol or not device_id:
-                continue
-
-            if "CMD" in data_dict:
-                # It's a switch
-                switch = data_dict.get("SWITCH", "0")
-                full_device_id = f"{protocol}_{device_id}_{switch}"
-                device_type = "switch"
-            else:
-                # It's a sensor
-                full_device_id = f"{protocol}_{device_id}"
-                device_type = "sensor"
-
-            _LOGGER.info(
-                "RFLink dispatcher sending to 'rflink_update_%s' with data: %s",
-                full_device_id,
-                data_dict,
-            )
-
-            # Broadcast state change (sending the full dictionary)
-            async_dispatcher_send(hass, f"rflink_update_{full_device_id}", data_dict)
-
-            # Add to recent unknown devices buffer for UI learning
-            data = hass.data[DOMAIN].get(entry_id)
-            if data:
-                buffer = data.recent_unknown_devices
-                recent_dict = dict(buffer)
-
-                # Remove it if it exists so it moves to the end of the dict (most recent)
-                if full_device_id in recent_dict:
-                    del recent_dict[full_device_id]
-
-                recent_dict[full_device_id] = {"type": device_type, "data": data_dict}
-                data.recent_unknown_devices = deque(recent_dict.items(), maxlen=50)
+        _process_packet(hass, entry_id, decoded_line)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -251,6 +266,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        if hass.services.has_service(DOMAIN, "simulate_packet"):
+            hass.services.async_remove(DOMAIN, "simulate_packet")
         data = hass.data[DOMAIN].pop(entry.entry_id)
 
         if data.reconnect_task:

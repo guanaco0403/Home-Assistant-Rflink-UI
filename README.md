@@ -88,18 +88,32 @@ data:
   command: "1a4a;4;ON"
 ```
 
+## 🛠 Action: `rflink_ui.simulate_packet`
+
+You can simulate receiving a raw RFLink packet string in the integration. This is highly useful for testing or auto-discovering devices without physical hardware.
+
+### Example:
+
+```yaml
+action: rflink_ui.simulate_packet
+data:
+  packet: "20;01;Kaku;ID=1234abcd;SWITCH=1;CMD=ON;"
+```
+
 ## 🧪 Requirements
 
 - Home Assistant 2026.5.4 or newer
 - Python 3.12+
 - pyserial-asyncio-fast>=0.11 (automatically installed)
 
-## 🏷 Supported Platforms
+## 🏷 Supported Platforms & Entities
 
-- `sensor` – For temperature, humidity, and other read-only RF signals
-- `switch` – For writable on/off RF plugs and lights
-- `binary_sensor` – For monitoring the gateway connection status
-- `radio_frequency` – For the main gateway entity that transmits custom commands
+- **`sensor`** — Creates dedicated `Temperature` (in °C), `Humidity` (in %), and `Battery` status entities for numerical climate sensors (e.g., Oregon Scientific, Cresta). Extra fields like wind or pressure are stored as attributes on these entities.
+- **`switch`** — Creates control entities for writable RF outlets, relays, and lights (e.g., Kaku, Unitec, Chacon) so you can trigger them or sync their state with physical remotes.
+- **`binary_sensor`** — Covers status monitoring:
+  - **Gateway Connection**: A connectivity sensor tracking the serial port connection to the RFLink gateway.
+  - **RF Devices**: Any binary state sensor (e.g., PIR motion detectors, door/window opening contacts, smoke detectors, water leak sensors, doorbells). Fully supports configurable `device_class` and `off_delay` for trigger-only sensors.
+- **`radio_frequency`** *(New in Home Assistant 2026.5.0)* — Exposes the main gateway transmitter entity to allow broadcasting custom RF payloads using standard actions.
 
 ## 📁 File Structure
 

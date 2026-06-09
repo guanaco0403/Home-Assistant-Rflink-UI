@@ -19,3 +19,16 @@ send_command:
       example: 1;ON
       selector:
         text:
+
+simulate_packet:
+  name: Simulate packet
+  description: Simulates receiving a raw packet from the RFLink gateway for testing.
+  fields:
+    packet:
+      name: Packet
+      description: The raw RFLink packet string (e.g., 20;01;Kaku;ID=1234abcd;SWITCH=1;CMD=ON;).
+      required: true
+      example: 20;01;Kaku;ID=1234abcd;SWITCH=1;CMD=ON;
+      selector:
+        text:
+

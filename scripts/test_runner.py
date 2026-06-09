@@ -143,18 +143,25 @@ def run_tests(pytest_args: list):
 
 def start_live_ha(port: int):
     """Start a live local Home Assistant instance."""
-    prepare_config_dir()
+    prepare_config_dir(port)
     print(f"Starting Home Assistant UI on http://localhost:{port}...")
     
     # Setup cross-platform serial_asyncio mapping and Windows stubs
     inner_cmd = (
-        "import sys, runpy, unittest.mock; "
+        "import sys, runpy, unittest.mock, asyncio; "
         "sys.modules['serial_asyncio'] = __import__('serial_asyncio_fast'); "
+        "sys.modules['pymicro_vad'] = unittest.mock.MagicMock(); "
+        "sys.modules['pyspeex_noise'] = unittest.mock.MagicMock(); "
+        "sys.modules['webrtc_noise_gain'] = unittest.mock.MagicMock(); "
+        "asyncio.events.AbstractEventLoop.add_signal_handler = lambda *a, **k: None; "
     )
     if os.name == "nt":
         inner_cmd += (
+            "import signal; "
+            "signal.SIGHUP = 1; "
             "sys.modules['fcntl'] = unittest.mock.MagicMock(); "
             "sys.modules['resource'] = unittest.mock.MagicMock(); "
+            "asyncio.ProactorEventLoop.add_signal_handler = lambda *a, **k: None; "
         )
     inner_cmd += "sys.argv[0] = 'homeassistant'; runpy.run_module('homeassistant', run_name='__main__')"
     
@@ -163,7 +170,7 @@ def start_live_ha(port: int):
         "-c",
         inner_cmd,
         "--config", str(CONFIG_DIR),
-        "--port", str(port)
+        "--ignore-os-check"
     ]
     
     try:
@@ -172,7 +179,7 @@ def start_live_ha(port: int):
         print("\nHome Assistant stopped by user.")
 
 
-def prepare_config_dir():
+def prepare_config_dir(port: int):
     """Create configuration directory and copy integration files."""
     CONFIG_DIR.mkdir(exist_ok=True)
     target_cc_dir = CONFIG_DIR / "custom_components"
@@ -186,15 +193,37 @@ def prepare_config_dir():
     print(f"Copied integration to: {target_integration_dir}")
 
     config_yaml = CONFIG_DIR / "configuration.yaml"
-    if not config_yaml.exists():
-        with open(config_yaml, "w", encoding="utf-8") as f:
-            f.write("# Home Assistant Testing Configuration\n")
-            f.write("default_config:\n")
-            f.write("logger:\n")
-            f.write("  default: info\n")
-            f.write("  logs:\n")
-            f.write("    custom_components.rflink_ui: debug\n")
-        print(f"Created default configuration: {config_yaml}")
+    with open(config_yaml, "w", encoding="utf-8") as f:
+        f.write("# Home Assistant Testing Configuration\n")
+        f.write("default_config:\n")
+        f.write("http:\n")
+        f.write(f"  server_port: {port}\n")
+        f.write("logger:\n")
+        f.write("  default: info\n")
+        f.write("  logs:\n")
+        f.write("    custom_components.rflink_ui: debug\n")
+    print(f"Configured configuration.yaml with server_port={port}")
+
+    # Bypass onboarding steps (except user creation which requires complex security hashes)
+    storage_dir = CONFIG_DIR / ".storage"
+    storage_dir.mkdir(exist_ok=True)
+    onboarding_file = storage_dir / "onboarding"
+    with open(onboarding_file, "w", encoding="utf-8") as f:
+        f.write(
+            '{\n'
+            '  "version": 4,\n'
+            '  "minor_version": 1,\n'
+            '  "key": "onboarding",\n'
+            '  "data": {\n'
+            '    "done": [\n'
+            '      "core_config",\n'
+            '      "integration",\n'
+            '      "analytics"\n'
+            '    ]\n'
+            '  }\n'
+            '}\n'
+        )
+    print("Bypassed onboarding steps (core_config, integration, analytics).")
 
 
 def main():

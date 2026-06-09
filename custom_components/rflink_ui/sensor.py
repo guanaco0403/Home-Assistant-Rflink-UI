@@ -34,6 +34,7 @@ async def async_setup_entry(
     for device_id, name in sensors.items():
         entities.append(RFLinkSensor(entry.entry_id, device_id, name, "temperature"))
         entities.append(RFLinkSensor(entry.entry_id, device_id, name, "humidity"))
+        entities.append(RFLinkSensor(entry.entry_id, device_id, name, "battery"))
 
     if entities:
         async_add_entities(entities)
@@ -64,6 +65,9 @@ class RFLinkSensor(RestoreSensor):
             self._attr_device_class = SensorDeviceClass.HUMIDITY
             self._attr_state_class = SensorStateClass.MEASUREMENT
             self._attr_native_unit_of_measurement = PERCENTAGE
+        elif sensor_type == "battery":
+            self._attr_name = "Battery"
+            self._attr_icon = "mdi:battery"
         else:
             self._attr_name = sensor_type.capitalize()
 
@@ -146,6 +150,11 @@ class RFLinkSensor(RestoreSensor):
                     has_update = True
                 except ValueError:
                     attributes["humidity_raw"] = data_dict["HUM"]
+
+        elif self._sensor_type == "battery":
+            if "BAT" in data_dict:
+                self._attr_native_value = data_dict["BAT"]
+                has_update = True
 
         if "BAT" in data_dict:
             attributes["battery"] = data_dict["BAT"]

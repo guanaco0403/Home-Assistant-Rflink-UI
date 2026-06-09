@@ -221,7 +221,7 @@ async def test_options_flow_binary_sensors(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Capteur binaire] Kaku_learned_bin",
+            "device_id": "[Binary Sensor] Kaku_learned_bin",
             "name": "Learned Bin Sensor",
         },
     )
@@ -252,7 +252,7 @@ async def test_options_flow_binary_sensors(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Capteur binaire] Kaku_learned_bin",
+            "device_id": "[Binary Sensor] Kaku_learned_bin",
             "new_device_id": "Kaku_modified_bin",
         },
     )
@@ -271,7 +271,7 @@ async def test_options_flow_binary_sensors(hass, mock_serial_connection):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Capteur binaire] Kaku_modified_bin",
+            "device_id": "[Binary Sensor] Kaku_modified_bin",
         },
     )
     assert result["type"] == "create_entry"

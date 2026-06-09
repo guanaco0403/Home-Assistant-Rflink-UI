@@ -11,11 +11,7 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 
 ---
 
-## 📋 Supported Devices
-The RFLink UI integration supports a wide range of 433MHz devices. Because RFLink acts as a universal bridge, if your device uses a protocol supported by the RFLink firmware, it will likely work with this integration.
-BUT, the only devices i implemented are:
-- Switch
-- Sensor (like temperature and humidity)
+
 
 ## ✨ Features
 
@@ -27,6 +23,15 @@ BUT, the only devices i implemented are:
 - 🟢 **Connection Sensor**: Includes a binary sensor to monitor the gateway's connection status in real-time
 
 ---
+
+## 🏷 Supported Platforms & Entities
+
+- **`sensor`** — Creates dedicated `Temperature` (in °C), `Humidity` (in %), and `Battery` status entities for numerical climate sensors (e.g., Oregon Scientific, Cresta). Extra fields like wind or pressure are stored as attributes on these entities.
+- **`switch`** — Creates control entities for writable RF outlets, relays, and lights (e.g., Kaku, Unitec, Chacon) so you can trigger them or sync their state with physical remotes.
+- **`binary_sensor`** — Covers status monitoring:
+  - **Gateway Connection**: A connectivity sensor tracking the serial port connection to the RFLink gateway.
+  - **RF Devices**: Any binary state sensor (e.g., PIR motion detectors, door/window opening contacts, smoke detectors, water leak sensors, doorbells). Fully supports configurable `device_class` and `off_delay` for trigger-only sensors.
+- **`radio_frequency`** *(New in Home Assistant 2026.5.0)* — Exposes the main gateway transmitter entity to allow broadcasting custom RF payloads using standard actions.
 
 ## ⚠️ Warning
 - The entity unique ID is generated using the hardware's protocol and ID (e.g., `rflink_switch_Unitec_1a4a_4`).
@@ -105,15 +110,6 @@ data:
 - Home Assistant 2026.5.4 or newer
 - Python 3.12+
 - pyserial-asyncio-fast>=0.11 (automatically installed)
-
-## 🏷 Supported Platforms & Entities
-
-- **`sensor`** — Creates dedicated `Temperature` (in °C), `Humidity` (in %), and `Battery` status entities for numerical climate sensors (e.g., Oregon Scientific, Cresta). Extra fields like wind or pressure are stored as attributes on these entities.
-- **`switch`** — Creates control entities for writable RF outlets, relays, and lights (e.g., Kaku, Unitec, Chacon) so you can trigger them or sync their state with physical remotes.
-- **`binary_sensor`** — Covers status monitoring:
-  - **Gateway Connection**: A connectivity sensor tracking the serial port connection to the RFLink gateway.
-  - **RF Devices**: Any binary state sensor (e.g., PIR motion detectors, door/window opening contacts, smoke detectors, water leak sensors, doorbells). Fully supports configurable `device_class` and `off_delay` for trigger-only sensors.
-- **`radio_frequency`** *(New in Home Assistant 2026.5.0)* — Exposes the main gateway transmitter entity to allow broadcasting custom RF payloads using standard actions.
 
 ## 📁 File Structure
 

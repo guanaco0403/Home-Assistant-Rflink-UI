@@ -71,8 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
 
-    active_devices = set(entry.options.get("switches", {}).keys()) | set(
-        entry.options.get("sensors", {}).keys()
+    active_devices = (
+        set(entry.options.get("switches", {}).keys())
+        | set(entry.options.get("sensors", {}).keys())
+        | set(entry.options.get("binary_sensors", {}).keys())
     )
 
     for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):

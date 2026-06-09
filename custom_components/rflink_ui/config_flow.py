@@ -72,6 +72,9 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         self.options = dict(config_entry.options)
         self.options["switches"] = dict(self.options.get("switches", {}))
         self.options["sensors"] = dict(self.options.get("sensors", {}))
+        self.options["binary_sensors"] = dict(self.options.get("binary_sensors", {}))
+        self._temp_device_id = None
+        self._temp_name = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -105,10 +108,16 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                     if selection.startswith("[Interrupteur] "):
                         dev_id = selection.replace("[Interrupteur] ", "")
                         self.options["switches"][dev_id] = name
+                        return self.async_create_entry(title="", data=self.options)
+                    elif selection.startswith("[Capteur binaire] "):
+                        dev_id = selection.replace("[Capteur binaire] ", "")
+                        self._temp_device_id = dev_id
+                        self._temp_name = name
+                        return await self.async_step_binary_sensor_options()
                     elif selection.startswith("[Capteur] "):
                         dev_id = selection.replace("[Capteur] ", "")
                         self.options["sensors"][dev_id] = name
-                    return self.async_create_entry(title="", data=self.options)
+                        return self.async_create_entry(title="", data=self.options)
 
         devices_dict = {
             "refresh": "Refresh list",
@@ -119,15 +128,19 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         if data:
             configured_switches = self.options.get("switches", {})
             configured_sensors = self.options.get("sensors", {})
+            configured_binary_sensors = self.options.get("binary_sensors", {})
             for dev_id, info in data.recent_unknown_devices:
                 if (
                     dev_id not in configured_switches
                     and dev_id not in configured_sensors
+                    and dev_id not in configured_binary_sensors
                 ):
                     has_devices = True
                     if info["type"] == "switch":
-                        key = f"[Interrupteur] {dev_id}"
-                        devices_dict[key] = f"{key}"
+                        key_sw = f"[Interrupteur] {dev_id}"
+                        key_bs = f"[Capteur binaire] {dev_id}"
+                        devices_dict[key_sw] = f"{key_sw}"
+                        devices_dict[key_bs] = f"{key_bs}"
                     else:
                         key = f"[Capteur] {dev_id}"
                         devices_dict[key] = f"{key}"
@@ -155,22 +168,67 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             name = user_input["name"]
             dev_type = user_input["device_type"]
 
-            if dev_type == "Switch" or dev_type == "Interrupteur":
+            if dev_type in ["Switch", "Interrupteur"]:
                 self.options["switches"][dev_id] = name
+                return self.async_create_entry(title="", data=self.options)
+            elif dev_type in ["Binary Sensor", "Capteur binaire"]:
+                self._temp_device_id = dev_id
+                self._temp_name = name
+                return await self.async_step_binary_sensor_options()
             else:
                 self.options["sensors"][dev_id] = name
-
-            return self.async_create_entry(title="", data=self.options)
+                return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
             step_id="add_manual",
             data_schema=vol.Schema(
                 {
                     vol.Required("device_type", default="Switch"): vol.In(
-                        ["Switch", "Sensor"]
+                        ["Switch", "Sensor", "Binary Sensor", "Interrupteur", "Capteur", "Capteur binaire"]
                     ),
                     vol.Required("device_id"): str,
                     vol.Required("name"): str,
+                }
+            ),
+        )
+
+    async def async_step_binary_sensor_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Configure binary sensor specific options."""
+        if user_input is not None:
+            device_class = user_input.get("device_class")
+            off_delay = user_input.get("off_delay")
+
+            # Save to options dict
+            self.options["binary_sensors"][self._temp_device_id] = {
+                "name": self._temp_name,
+                "device_class": device_class if device_class != "none" else None,
+                "off_delay": off_delay if off_delay else None,
+            }
+            return self.async_create_entry(title="", data=self.options)
+
+        # List of binary sensor device classes supported by Home Assistant
+        try:
+            from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+            device_classes = ["none"] + [c.value for c in BinarySensorDeviceClass]
+        except ImportError:
+            device_classes = [
+                "none", "battery", "co", "cold", "connectivity", "door", "garage_door",
+                "gas", "heat", "light", "lock", "moisture", "motion", "moving",
+                "occupancy", "opening", "plug", "power", "presence", "problem",
+                "running", "safety", "smoke", "sound", "tamper", "update", "vibration",
+                "window"
+            ]
+
+        return self.async_show_form(
+            step_id="binary_sensor_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("device_class", default="none"): vol.In(device_classes),
+                    vol.Optional("off_delay"): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ),
         )
@@ -181,10 +239,14 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Modify a device ID."""
         configured_switches = self.options.get("switches", {})
         configured_sensors = self.options.get("sensors", {})
+        configured_binary_sensors = self.options.get("binary_sensors", {})
 
         all_devices = {}
         for dev_id, name in configured_switches.items():
             all_devices[f"[Interrupteur] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, config in configured_binary_sensors.items():
+            name = config.get("name") if isinstance(config, dict) else config
+            all_devices[f"[Capteur binaire] {dev_id}"] = f"{name} ({dev_id})"
         for dev_id, name in configured_sensors.items():
             all_devices[f"[Capteur] {dev_id}"] = f"{name} ({dev_id})"
 
@@ -212,6 +274,12 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 if name:
                     self.options["switches"][new_dev_id] = name
                     device_type = "switch"
+            elif selection.startswith("[Capteur binaire] "):
+                old_dev_id = selection.replace("[Capteur binaire] ", "")
+                config = self.options["binary_sensors"].pop(old_dev_id, None)
+                if config:
+                    self.options["binary_sensors"][new_dev_id] = config
+                    device_type = "binary_sensor"
             elif selection.startswith("[Capteur] "):
                 old_dev_id = selection.replace("[Capteur] ", "")
                 name = self.options["sensors"].pop(old_dev_id, None)
@@ -233,6 +301,16 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                     new_unique_id = f"rflink_switch_{new_dev_id}"
                     ent_entry = ent_reg.async_get_entity_id(
                         "switch", DOMAIN, old_unique_id
+                    )
+                    if ent_entry:
+                        ent_reg.async_update_entity(
+                            ent_entry, new_unique_id=new_unique_id
+                        )
+                elif device_type == "binary_sensor":
+                    old_unique_id = f"rflink_binary_sensor_{old_dev_id}"
+                    new_unique_id = f"rflink_binary_sensor_{new_dev_id}"
+                    ent_entry = ent_reg.async_get_entity_id(
+                        "binary_sensor", DOMAIN, old_unique_id
                     )
                     if ent_entry:
                         ent_reg.async_update_entity(
@@ -270,10 +348,14 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Remove a device."""
         configured_switches = self.options.get("switches", {})
         configured_sensors = self.options.get("sensors", {})
+        configured_binary_sensors = self.options.get("binary_sensors", {})
 
         all_devices = {}
         for dev_id, name in configured_switches.items():
             all_devices[f"[Interrupteur] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, config in configured_binary_sensors.items():
+            name = config.get("name") if isinstance(config, dict) else config
+            all_devices[f"[Capteur binaire] {dev_id}"] = f"{name} ({dev_id})"
         for dev_id, name in configured_sensors.items():
             all_devices[f"[Capteur] {dev_id}"] = f"{name} ({dev_id})"
 
@@ -285,6 +367,9 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             if selection.startswith("[Interrupteur] "):
                 dev_id = selection.replace("[Interrupteur] ", "")
                 self.options["switches"].pop(dev_id, None)
+            elif selection.startswith("[Capteur binaire] "):
+                dev_id = selection.replace("[Capteur binaire] ", "")
+                self.options["binary_sensors"].pop(dev_id, None)
             elif selection.startswith("[Capteur] "):
                 dev_id = selection.replace("[Capteur] ", "")
                 self.options["sensors"].pop(dev_id, None)

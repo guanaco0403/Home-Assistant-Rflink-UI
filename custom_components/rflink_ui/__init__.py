@@ -107,9 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if packet:
             _process_packet(hass, entry.entry_id, packet)
 
-    hass.services.async_register(
-        DOMAIN, "simulate_packet", async_simulate_packet
-    )
+    hass.services.async_register(DOMAIN, "simulate_packet", async_simulate_packet)
 
     return True
 

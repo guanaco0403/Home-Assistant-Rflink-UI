@@ -211,21 +211,47 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         # List of binary sensor device classes supported by Home Assistant
         try:
             from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+
             device_classes = ["none"] + [c.value for c in BinarySensorDeviceClass]
         except ImportError:
             device_classes = [
-                "none", "battery", "co", "cold", "connectivity", "door", "garage_door",
-                "gas", "heat", "light", "lock", "moisture", "motion", "moving",
-                "occupancy", "opening", "plug", "power", "presence", "problem",
-                "running", "safety", "smoke", "sound", "tamper", "update", "vibration",
-                "window"
+                "none",
+                "battery",
+                "co",
+                "cold",
+                "connectivity",
+                "door",
+                "garage_door",
+                "gas",
+                "heat",
+                "light",
+                "lock",
+                "moisture",
+                "motion",
+                "moving",
+                "occupancy",
+                "opening",
+                "plug",
+                "power",
+                "presence",
+                "problem",
+                "running",
+                "safety",
+                "smoke",
+                "sound",
+                "tamper",
+                "update",
+                "vibration",
+                "window",
             ]
 
         return self.async_show_form(
             step_id="binary_sensor_options",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("device_class", default="none"): vol.In(device_classes),
+                    vol.Optional("device_class", default="none"): vol.In(
+                        device_classes
+                    ),
                     vol.Optional("off_delay"): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),

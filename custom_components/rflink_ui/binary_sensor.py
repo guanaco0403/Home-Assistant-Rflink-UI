@@ -123,17 +123,40 @@ class RFLinkBinarySensor(BinarySensorEntity, RestoreEntity):
             self._protocol = "Unknown"
             self._rflink_id = "0"
 
-    def _detect_device_class(self, device_id: str, name: str) -> BinarySensorDeviceClass | None:
+    def _detect_device_class(
+        self, device_id: str, name: str
+    ) -> BinarySensorDeviceClass | None:
         """Attempt to detect device class from device_id or name."""
         name_lower = name.lower()
         id_lower = device_id.lower()
-        if "motion" in name_lower or "pir" in name_lower or "detect" in name_lower or "motion" in id_lower:
+        if (
+            "motion" in name_lower
+            or "pir" in name_lower
+            or "detect" in name_lower
+            or "motion" in id_lower
+        ):
             return BinarySensorDeviceClass.MOTION
-        if "door" in name_lower or "window" in name_lower or "opening" in name_lower or "door" in id_lower or "window" in id_lower:
+        if (
+            "door" in name_lower
+            or "window" in name_lower
+            or "opening" in name_lower
+            or "door" in id_lower
+            or "window" in id_lower
+        ):
             return BinarySensorDeviceClass.OPENING
-        if "smoke" in name_lower or "co" in name_lower or "gas" in name_lower or "smoke" in id_lower:
+        if (
+            "smoke" in name_lower
+            or "co" in name_lower
+            or "gas" in name_lower
+            or "smoke" in id_lower
+        ):
             return BinarySensorDeviceClass.SMOKE
-        if "moisture" in name_lower or "water" in name_lower or "flood" in name_lower or "leak" in name_lower:
+        if (
+            "moisture" in name_lower
+            or "water" in name_lower
+            or "flood" in name_lower
+            or "leak" in name_lower
+        ):
             return BinarySensorDeviceClass.MOISTURE
         if "connectivity" in name_lower or "ping" in name_lower:
             return BinarySensorDeviceClass.CONNECTIVITY

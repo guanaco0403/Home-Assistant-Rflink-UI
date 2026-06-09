@@ -9,10 +9,10 @@
 
 This integration uses the `serial_asyncio` library for fast, non-blocking communication and is designed to bring RFLink into the modern era of Home Assistant.
 
+
+<img width="1117" height="832" alt="image" src="https://github.com/user-attachments/assets/53aaba17-a0ba-4cde-85b3-9cf3529ce602" />
+
 ---
-
-
-
 ## ✨ Features
 
 - 📡 **Connects to any standard Arduino RFLink gateway** via USB/Serial

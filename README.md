@@ -19,8 +19,9 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 - 🔍 **Auto-Discovery Mode**: Discovers recently received signals and lets you add them directly from a dropdown in the UI!
 - ✍️ **Manual Addition**: Add your switches and sensors manually if you already know their protocol and IDs
 - 🔄 **Async Serial Polling**: Non-blocking connection with automatic background reconnects and keep-alive pings
-- 📻 **Custom Commands**: Send any raw RF command using the `radio_frequency.send_command` service
+- 📻 **Custom Commands**: Send any raw RF command using the rflink_ui.send_command service.
 - 🟢 **Connection Sensor**: Includes a binary sensor to monitor the gateway's connection status in real-time
+- 🧪 **Packet Simulation**: Built-in service (rflink_ui.simulate_packet) to inject mock RF packets for easy testing and debugging without physical hardware.
 
 ---
 
@@ -39,6 +40,12 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 - This integration is built as a complete replacement for the legacy `rflink` component. **Do not run both simultaneously on the same serial port !!!**
 
 ---
+
+## 🧪 Requirements
+
+- **Home Assistant 2026.5.4 or newer**
+- Python 3.12+
+- pyserial-asyncio-fast>=0.11 (automatically installed)
 
 ## 📦 Installation
 
@@ -103,27 +110,6 @@ You can simulate receiving a raw RFLink packet string in the integration. This i
 action: rflink_ui.simulate_packet
 data:
   packet: "20;01;Kaku;ID=1234abcd;SWITCH=1;CMD=ON;"
-```
-
-## 🧪 Requirements
-
-- Home Assistant 2026.5.4 or newer
-- Python 3.12+
-- pyserial-asyncio-fast>=0.11 (automatically installed)
-
-## 📁 File Structure
-
-```text
-custom_components/
-└── rflink_ui/
-    ├── __init__.py
-    ├── manifest.json
-    ├── sensor.py
-    ├── switch.py
-    ├── binary_sensor.py
-    ├── radio_frequency.py
-    ├── config_flow.py
-    └── translations/
 ```
 
 ## 📌 Integration Type & Quality

@@ -2,7 +2,6 @@ import asyncio
 import datetime
 from unittest.mock import MagicMock
 from collections import deque
-import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import dispatcher_send

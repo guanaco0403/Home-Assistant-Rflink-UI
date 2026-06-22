@@ -255,3 +255,101 @@ async def test_config_flow_manual_port_failure(hass, mock_serial_connection):
     )
     assert result["type"] == "form"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow_manual_light(hass, mock_serial_connection):
+    """Test adding a light manually via options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"port": "COM1"},
+        options={"switches": {}, "sensors": {}, "lights": {}},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == "menu"
+    assert result["step_id"] == "init"
+
+    # Select add_manual step
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_manual"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_manual"
+
+    # Add a Light manually
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_type": "Light",
+            "device_id": "Kaku_123_1",
+            "name": "My Dimmer",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "light_options"
+
+    # Choose type and submit
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "type": "dimmable",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert entry.options["lights"] == {
+        "Kaku_123_1": {"name": "My Dimmer", "type": "dimmable"}
+    }
+
+
+async def test_options_flow_add_learned_light(hass, mock_serial_connection):
+    """Test adding a recently seen/learned light via options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"port": "COM1"},
+        options={"switches": {}, "sensors": {}, "lights": {}},
+    )
+    entry.add_to_hass(hass)
+
+    # Populate recent unknown devices in hass.data
+    mock_data = MagicMock()
+    mock_data.recent_unknown_devices = deque(
+        [
+            ("Kaku_learned_1", {"type": "switch", "data": {}}),
+        ]
+    )
+    hass.data[DOMAIN] = {entry.entry_id: mock_data}
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # Select add_learned step
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_learned"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_learned"
+
+    # Submit selection of Light
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_id": "[Light] Kaku_learned_1",
+            "name": "Learned Dimmer",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "light_options"
+
+    # Choose type and submit
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "type": "hybrid",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert entry.options["lights"] == {
+        "Kaku_learned_1": {"name": "Learned Dimmer", "type": "hybrid"}
+    }

@@ -1,5 +1,4 @@
 import asyncio
-import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from pytest_homeassistant_custom_component.common import MockConfigEntry

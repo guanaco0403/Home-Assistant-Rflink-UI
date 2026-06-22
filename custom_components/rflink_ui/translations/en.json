@@ -59,6 +59,19 @@
         "data": {
           "device_id": "Device to remove"
         }
+      },
+      "light_options": {
+        "title": "Light Options",
+        "data": {
+          "type": "Light Type (dimmable, hybrid, switchable, or toggle)"
+        }
+      },
+      "binary_sensor_options": {
+        "title": "Binary Sensor Options",
+        "data": {
+          "device_class": "Device Class",
+          "off_delay": "Off Delay (seconds)"
+        }
       }
     },
     "error": {

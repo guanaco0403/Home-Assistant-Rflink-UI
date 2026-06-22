@@ -59,6 +59,19 @@
         "data": {
           "device_id": "Appareil"
         }
+      },
+      "light_options": {
+        "title": "Options de la lumière",
+        "data": {
+          "type": "Type de lumière (dimmable, hybrid, switchable, ou toggle)"
+        }
+      },
+      "binary_sensor_options": {
+        "title": "Options du capteur binaire",
+        "data": {
+          "device_class": "Classe de l'appareil",
+          "off_delay": "Délai d'extinction (secondes)"
+        }
       }
     },
     "error": {

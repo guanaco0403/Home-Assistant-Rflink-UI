@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import glob
 import serial
 import serial.tools.list_ports
 import voluptuous as vol
@@ -33,6 +34,8 @@ class RFLinkTransmitterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             port = user_input[CONF_PORT]
+            if port == "Enter manually":
+                return await self.async_step_manual_port()
             try:
                 # Do this in an executor to avoid blocking the event loop
                 await self.hass.async_add_executor_job(self._test_serial_port, port)
@@ -46,13 +49,45 @@ class RFLinkTransmitterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         port_list = [port.device for port in ports]
 
+        def _get_by_id_ports() -> list[str]:
+            return glob.glob("/dev/serial/by-id/*")
+
+        by_id_ports = await self.hass.async_add_executor_job(_get_by_id_ports)
+        port_list.extend(by_id_ports)
+        port_list.append("Enter manually")
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_PORT, default=port_list[0] if port_list else ""
-                    ): (vol.In(port_list) if port_list else str),
+                    vol.Required(CONF_PORT, default=port_list[0]): vol.In(port_list),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_manual_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle manual port entry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            port = user_input[CONF_PORT]
+            try:
+                # Do this in an executor to avoid blocking the event loop
+                await self.hass.async_add_executor_job(self._test_serial_port, port)
+            except Exception:  # pylint: disable=broad-except
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=f"RFLink ({port})", data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="manual_port",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PORT): str,
                 }
             ),
             errors=errors,

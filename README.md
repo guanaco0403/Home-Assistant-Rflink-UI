@@ -73,7 +73,7 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 
 1. Go to **Settings > Devices & Services > Add Integration**
 2. Search for **RFLink UI**
-3. Select your serial port from the dropdown (e.g., `/dev/ttyUSB0` or `COM3`)
+3. Select your serial port from the dropdown (e.g., `/dev/ttyUSB0` or `COM3`) !! use the "serial by id" one if your home assistant hardware is changing the USB at reboot
 4. Submit to connect!
 
 ### Adding Devices (Options Flow)

@@ -1,4 +1,25 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "RFLink",
+        "description": "Select the serial port of your RFLink gateway.",
+        "data": {
+          "port": "Port"
+        }
+      },
+      "manual_port": {
+        "title": "Manual Port Entry",
+        "description": "Enter the path to your RFLink gateway (e.g., /dev/serial/by-id/...)",
+        "data": {
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the serial port."
+    }
+  },
   "options": {
     "step": {
       "init": {

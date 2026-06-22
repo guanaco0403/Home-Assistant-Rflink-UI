@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock, patch
 from collections import deque
-import pytest
 
 from homeassistant import config_entries
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -29,12 +28,14 @@ async def test_config_flow_success(hass, mock_serial_connection):
 async def test_config_flow_failure(hass, mock_serial_connection):
     """Test user config flow handles serial check failure."""
     # Make the serial port check fail
-    mock_serial_connection["serial_class"].side_effect = Exception("Failed to open port")
+    mock_serial_connection["serial_class"].side_effect = Exception(
+        "Failed to open port"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    
+
     # Submit port
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -89,14 +90,16 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
 
     # Populate recent unknown devices in hass.data
     mock_data = MagicMock()
-    mock_data.recent_unknown_devices = deque([
-        ("Kaku_learned_1", {"type": "switch", "data": {}}),
-        ("Oregon_learned_2", {"type": "sensor", "data": {}}),
-    ])
+    mock_data.recent_unknown_devices = deque(
+        [
+            ("Kaku_learned_1", {"type": "switch", "data": {}}),
+            ("Oregon_learned_2", {"type": "sensor", "data": {}}),
+        ]
+    )
     hass.data[DOMAIN] = {entry.entry_id: mock_data}
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    
+
     # Select add_learned step
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -168,3 +171,87 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     )
     assert result["type"] == "create_entry"
     assert "Oregon_old_2" not in entry.options["sensors"]
+
+
+async def test_config_flow_with_by_id_ports(hass, mock_serial_connection):
+    """Test config flow lists and allows selecting by-id ports."""
+    with patch(
+        "glob.glob",
+        return_value=["/dev/serial/by-id/usb-RFLink_gateway_1234-if00-port0"],
+    ) as mock_glob:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+
+        # Submit the by-id port
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": "/dev/serial/by-id/usb-RFLink_gateway_1234-if00-port0"},
+        )
+        assert result["type"] == "create_entry"
+        assert (
+            result["title"]
+            == "RFLink (/dev/serial/by-id/usb-RFLink_gateway_1234-if00-port0)"
+        )
+        assert result["data"] == {
+            "port": "/dev/serial/by-id/usb-RFLink_gateway_1234-if00-port0"
+        }
+        mock_glob.assert_called_once_with("/dev/serial/by-id/*")
+
+
+async def test_config_flow_manual_port(hass, mock_serial_connection):
+    """Test config flow with manual port entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    # Select "Enter manually"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": "Enter manually"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_port"
+
+    # Submit a custom port
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": "/dev/custom_port_path"},
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "RFLink (/dev/custom_port_path)"
+    assert result["data"] == {"port": "/dev/custom_port_path"}
+
+
+async def test_config_flow_manual_port_failure(hass, mock_serial_connection):
+    """Test config flow with manual port entry failing serial check."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    # Select "Enter manually"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": "Enter manually"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_port"
+
+    # Make the serial port check fail
+    mock_serial_connection["serial_class"].side_effect = Exception(
+        "Failed to open port"
+    )
+
+    # Submit a custom port
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": "/dev/custom_port_path"},
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}

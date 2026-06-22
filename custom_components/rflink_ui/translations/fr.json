@@ -1,4 +1,25 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "RFLink",
+        "description": "Sélectionnez le port série de votre passerelle RFLink.",
+        "data": {
+          "port": "Port"
+        }
+      },
+      "manual_port": {
+        "title": "Saisie manuelle du port",
+        "description": "Saisissez le chemin d'accès à votre passerelle RFLink (ex : /dev/serial/by-id/...)",
+        "data": {
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter au port série."
+    }
+  },
   "options": {
     "step": {
       "init": {

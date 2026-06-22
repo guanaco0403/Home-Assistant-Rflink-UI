@@ -16,7 +16,7 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 ## ✨ Features
 
 - 📡 **Connects to any standard Arduino RFLink gateway** via USB/Serial
-- 🔍 **Auto-Discovery Mode**: Discovers recently received signals and lets you add them directly from a dropdown in the UI!
+- 🔍 **Auto-Discovery Mode**: Discovers recently received signals, displays them as clean device IDs, and lets you choose their entity type (Switch, Binary Sensor, or Light) and configuration parameters right from the UI!
 - ✍️ **Manual Addition**: Add your switches and sensors manually if you already know their protocol and IDs
 - 🔄 **Async Serial Polling**: Non-blocking connection with automatic background reconnects and keep-alive pings
 - 📻 **Custom Commands**: Send any raw RF command using the rflink_ui.send_command service.
@@ -29,6 +29,11 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 
 - **`sensor`** — Creates dedicated `Temperature` (in °C), `Humidity` (in %), and `Battery` status entities for numerical climate sensors (e.g., Oregon Scientific, Cresta). Extra fields like wind or pressure are stored as attributes on these entities.
 - **`switch`** — Creates control entities for writable RF outlets, relays, and lights (e.g., Kaku, Unitec, Chacon) so you can trigger them or sync their state with physical remotes.
+- **`light`** — Creates dimmer and switch-like light entities (e.g., KlikAanKlikUit dimmers, Nexa wall plugs, Livolo switches). Supports brightness dimming level control and offers four configurable light command styles to accommodate different hardware behaviors:
+  - **`dimmable`**: Sends direct numeric brightness levels (`0-15`).
+  - **`hybrid`**: Sends brightness levels followed by an `ON` command (ideal for devices like the Telldus/Nexa MYCR-250 that need an activation signal to wake up/apply the level).
+  - **`switchable`**: Sends only standard `ON` and `OFF` commands (acts like a binary light switch).
+  - **`toggle`**: Sends only an `ON` command to cycle/toggle the state.
 - **`binary_sensor`** — Covers status monitoring:
   - **Gateway Connection**: A connectivity sensor tracking the serial port connection to the RFLink gateway.
   - **RF Devices**: Any binary state sensor (e.g., PIR motion detectors, door/window opening contacts, smoke detectors, water leak sensors, doorbells). Fully supports configurable `device_class` and `off_delay` for trigger-only sensors.

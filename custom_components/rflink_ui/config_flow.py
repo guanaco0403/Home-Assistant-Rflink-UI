@@ -141,23 +141,22 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 if not name:
                     errors["name"] = "missing_name"
                 else:
-                    if selection.startswith("[Switch] "):
-                        dev_id = selection.replace("[Switch] ", "")
-                        self.options["switches"][dev_id] = name
-                        return self.async_create_entry(title="", data=self.options)
-                    elif selection.startswith("[Light] "):
-                        dev_id = selection.replace("[Light] ", "")
-                        self._temp_device_id = dev_id
-                        self._temp_name = name
-                        return await self.async_step_light_options()
-                    elif selection.startswith("[Binary Sensor] "):
-                        dev_id = selection.replace("[Binary Sensor] ", "")
-                        self._temp_device_id = dev_id
-                        self._temp_name = name
-                        return await self.async_step_binary_sensor_options()
-                    elif selection.startswith("[Sensor] "):
-                        dev_id = selection.replace("[Sensor] ", "")
-                        self.options["sensors"][dev_id] = name
+                    self._temp_device_id = selection
+                    self._temp_name = name
+
+                    # Find the type of the device in recent_unknown_devices
+                    device_type = None
+                    if data:
+                        for dev_id, info in data.recent_unknown_devices:
+                            if dev_id == selection:
+                                device_type = info["type"]
+                                break
+
+                    if device_type == "switch":
+                        return await self.async_step_select_type()
+                    else:
+                        # Default is sensor
+                        self.options["sensors"][selection] = name
                         return self.async_create_entry(title="", data=self.options)
 
         devices_dict = {
@@ -179,16 +178,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                     and dev_id not in configured_lights
                 ):
                     has_devices = True
-                    if info["type"] == "switch":
-                        key_sw = f"[Switch] {dev_id}"
-                        key_bs = f"[Binary Sensor] {dev_id}"
-                        key_lt = f"[Light] {dev_id}"
-                        devices_dict[key_sw] = f"{key_sw}"
-                        devices_dict[key_bs] = f"{key_bs}"
-                        devices_dict[key_lt] = f"{key_lt}"
-                    else:
-                        key = f"[Sensor] {dev_id}"
-                        devices_dict[key] = f"{key}"
+                    devices_dict[dev_id] = dev_id
 
         if not has_devices:
             errors["base"] = "no_devices_found"
@@ -202,6 +192,31 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_select_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Select the type of device for the discovered switch command."""
+        if user_input is not None:
+            dev_type = user_input.get("device_type")
+            if dev_type == "Switch":
+                self.options["switches"][self._temp_device_id] = self._temp_name
+                return self.async_create_entry(title="", data=self.options)
+            elif dev_type == "Binary Sensor":
+                return await self.async_step_binary_sensor_options()
+            elif dev_type == "Light":
+                return await self.async_step_light_options()
+
+        return self.async_show_form(
+            step_id="select_type",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("device_type", default="Switch"): vol.In(
+                        ["Switch", "Binary Sensor", "Light"]
+                    ),
+                }
+            ),
         )
 
     async def async_step_add_manual(

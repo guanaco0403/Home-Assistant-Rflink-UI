@@ -98,9 +98,8 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
     )
     hass.data[DOMAIN] = {entry.entry_id: mock_data}
 
+    # 1. Test adding a Switch (needs select_type step)
     result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    # Select add_learned step
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"next_step_id": "add_learned"},
@@ -108,16 +107,44 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
     assert result["type"] == "form"
     assert result["step_id"] == "add_learned"
 
-    # Submit selection
+    # Submit selection of switch
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Switch] Kaku_learned_1",
+            "device_id": "Kaku_learned_1",
             "name": "Learned Switch",
         },
     )
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_type"
+
+    # Choose "Switch" and submit
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"device_type": "Switch"},
+    )
     assert result["type"] == "create_entry"
     assert entry.options["switches"] == {"Kaku_learned_1": "Learned Switch"}
+
+    # 2. Test adding a Sensor (directly added, no select_type step)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_learned"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_learned"
+
+    # Submit selection of sensor
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_id": "Oregon_learned_2",
+            "name": "Learned Sensor",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert entry.options["sensors"] == {"Oregon_learned_2": "Learned Sensor"}
 
 
 async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
@@ -331,13 +358,21 @@ async def test_options_flow_add_learned_light(hass, mock_serial_connection):
     assert result["type"] == "form"
     assert result["step_id"] == "add_learned"
 
-    # Submit selection of Light
+    # Submit selection of Light ID
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "device_id": "[Light] Kaku_learned_1",
+            "device_id": "Kaku_learned_1",
             "name": "Learned Dimmer",
         },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_type"
+
+    # Select device type as Light
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"device_type": "Light"},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "light_options"

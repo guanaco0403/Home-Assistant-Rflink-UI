@@ -72,6 +72,13 @@
           "device_class": "Classe de l'appareil",
           "off_delay": "Délai d'extinction (secondes)"
         }
+      },
+      "select_type": {
+        "title": "Sélectionner le type d'appareil",
+        "description": "Choisissez comment Home Assistant doit représenter cet appareil.",
+        "data": {
+          "device_type": "Type d'appareil"
+        }
       }
     },
     "error": {

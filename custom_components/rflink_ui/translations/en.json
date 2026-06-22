@@ -72,6 +72,13 @@
           "device_class": "Device Class",
           "off_delay": "Off Delay (seconds)"
         }
+      },
+      "select_type": {
+        "title": "Select Device Type",
+        "description": "Choose how Home Assistant should represent this device.",
+        "data": {
+          "device_type": "Device Type"
+        }
       }
     },
     "error": {

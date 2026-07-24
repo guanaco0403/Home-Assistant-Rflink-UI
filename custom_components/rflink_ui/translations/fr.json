@@ -47,6 +47,13 @@
           "name": "Nom de l'appareil"
         }
       },
+      "cover_options": {
+        "title": "Options du volet",
+        "description": "Configurez le volet roulant. Activez 'Inversé' pour les protocoles où MONTÉE/DESCENTE sont inversées (ex : certains appareils KlikAanKlikUit/NewKaku).",
+        "data": {
+          "inverted": "Inverser les commandes MONTÉE/DESCENTE"
+        }
+      },
       "modify": {
         "title": "Modifier l'ID d'un appareil",
         "data": {

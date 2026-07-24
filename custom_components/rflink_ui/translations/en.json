@@ -47,6 +47,13 @@
           "name": "Device Name"
         }
       },
+      "cover_options": {
+        "title": "Cover Options",
+        "description": "Configure the shutter/blind. Enable 'Inverted' for protocols where UP/DOWN are swapped (eg. some KlikAanKlikUit/NewKaku devices).",
+        "data": {
+          "inverted": "Inverted UP/DOWN commands"
+        }
+      },
       "modify": {
         "title": "Modify Device ID",
         "data": {

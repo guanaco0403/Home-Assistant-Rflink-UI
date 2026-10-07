@@ -153,7 +153,10 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                                 break
 
                     if device_type == "cover":
-                        self.options["covers"][selection] = {"name": name, "inverted": False}
+                        self.options["covers"][selection] = {
+                            "name": name,
+                            "inverted": False,
+                        }
                         return self.async_create_entry(title="", data=self.options)
                     if device_type == "switch":
                         return await self.async_step_select_type()
@@ -387,6 +390,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_sensors = self.options.get("sensors", {})
         configured_binary_sensors = self.options.get("binary_sensors", {})
         configured_lights = self.options.get("lights", {})
+        configured_covers = self.options.get("covers", {})
 
         all_devices = {}
         for dev_id, name in configured_switches.items():
@@ -535,7 +539,6 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_sensors = self.options.get("sensors", {})
         configured_binary_sensors = self.options.get("binary_sensors", {})
         configured_lights = self.options.get("lights", {})
-        configured_covers = self.options.get("covers", {})
         configured_covers = self.options.get("covers", {})
 
         all_devices = {}

@@ -38,9 +38,7 @@ class RFLinkCover(CoverEntity, RestoreEntity):
     _attr_should_poll = False
     _attr_force_update = True
     _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
 
     def __init__(self, entry_id: str, device_id: str, config: Any) -> None:
@@ -105,9 +103,7 @@ class RFLinkCover(CoverEntity, RestoreEntity):
             self._movement_state = (
                 "opening"
                 if self._attr_is_opening
-                else "closing"
-                if self._attr_is_closing
-                else "stopped"
+                else "closing" if self._attr_is_closing else "stopped"
             )
 
         self.async_on_remove(
@@ -144,7 +140,9 @@ class RFLinkCover(CoverEntity, RestoreEntity):
         data = self.hass.data.get(DOMAIN, {}).get(self._entry_id)
         if not data:
             return
-        frame = f"10;{self._protocol};{self._rflink_id};{self._rflink_switch};{command};\n"
+        frame = (
+            f"10;{self._protocol};{self._rflink_id};{self._rflink_switch};{command};\n"
+        )
         try:
             await data.async_send_command(frame)
         except Exception:

@@ -7,7 +7,7 @@
 
 **Home-Assistant-RFLink-UI** is a modern, fully UI-driven custom [Home Assistant](https://www.home-assistant.io) integration for Arduino RFLink gateways. Unlike the legacy YAML-based RFLink integration, this component is configured entirely through the Home Assistant UI and supports dynamic discovery of devices.
 
-This integration uses the `serial_asyncio` library for fast, non-blocking communication and is designed to bring RFLink into the modern era of Home Assistant.
+This integration uses the `serialx` library for robust, non-blocking asynchronous serial communication and is designed to bring RFLink into the modern era of Home Assistant.
 
 
 <img width="1117" height="832" alt="image" src="https://github.com/user-attachments/assets/53aaba17-a0ba-4cde-85b3-9cf3529ce602" />
@@ -15,18 +15,19 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 ---
 ## ✨ Features
 
-- 📡 **Connects to any standard Arduino RFLink gateway** via USB/Serial
-- 🔍 **Auto-Discovery Mode**: Discovers recently received signals, displays them as clean device IDs, and lets you choose their entity type (Switch, Binary Sensor, or Light) and configuration parameters right from the UI!
-- ✍️ **Manual Addition**: Add your switches and sensors manually if you already know their protocol and IDs
-- 🔄 **Async Serial Polling**: Non-blocking connection with automatic background reconnects and keep-alive pings
-- 📻 **Custom Commands**: Send any raw RF command using the rflink_ui.send_command service.
+- 📡 **Connects to any standard Arduino RFLink gateway** via USB/Serial or network sockets (`ser2net`)
+- 🔍 **Auto-Discovery Mode**: Discovers recently received signals, displays them as clean device IDs, and lets you choose their entity type (Switch, Cover, Binary Sensor, or Light) and configuration parameters right from the UI!
+- ✍️ **Manual Addition**: Add your switches, covers, and sensors manually if you already know their protocol and IDs
+- 🔄 **Async Serial Polling**: Non-blocking connection using `serialx` with automatic background reconnects and keep-alive pings
+- 📻 **Custom Commands**: Send any raw RF command using the `rflink_ui.send_command` service.
 - 🟢 **Connection Sensor**: Includes a binary sensor to monitor the gateway's connection status in real-time
-- 🧪 **Packet Simulation**: Built-in service (rflink_ui.simulate_packet) to inject mock RF packets for easy testing and debugging without physical hardware.
+- 🧪 **Packet Simulation**: Built-in service (`rflink_ui.simulate_packet`) to inject mock RF packets for easy testing and debugging without physical hardware.
 
 ---
 
 ## 🏷 Supported Platforms & Entities
 
+- **`cover`** — Creates motorized cover, roller shutter, and blind entities (e.g., Somfy RTS, Brell). Supports Open (`UP`), Close (`DOWN`), and Stop (`STOP`) commands, live movement state tracking (`opening`, `closing`, `stopped`), state restoration, and an optional **invert open/close direction** setting directly in the UI.
 - **`sensor`** — Creates dedicated `Temperature` (in °C), `Humidity` (in %), and `Battery` status entities for numerical climate sensors (e.g., Oregon Scientific, Cresta). Extra fields like wind or pressure are stored as attributes on these entities.
 - **`switch`** — Creates control entities for writable RF outlets, relays, and lights (e.g., Kaku, Unitec, Chacon) so you can trigger them or sync their state with physical remotes.
 - **`light`** — Creates dimmer and switch-like light entities (e.g., KlikAanKlikUit dimmers, Nexa wall plugs, Livolo switches). Supports brightness dimming level control and offers four configurable light command styles to accommodate different hardware behaviors:
@@ -50,7 +51,7 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
 
 - **Home Assistant 2026.5.4 or newer**
 - Python 3.12+
-- pyserial-asyncio-fast>=0.11 (automatically installed)
+- `serialx>=1.10.0` (automatically installed)
 
 ## 📦 Installation
 
@@ -84,11 +85,12 @@ This integration uses the `serial_asyncio` library for fast, non-blocking commun
    * **RFC 2217**: `rfc2217://<IP_OR_HOSTNAME>:<PORT>` (e.g., `rfc2217://192.168.1.50:2001`)
 5. Submit to connect!
 
-### Adding Devices (Options Flow)
+### Adding & Managing Devices (Options Flow)
 
 Once configured, click **Configure** on the integration card to:
-- **Add recently detected device**: View signals picked up in the last few minutes and quickly map them to an entity.
-- **Add device manually**: Manually type in the Protocol and ID.
+- **Add recently detected device**: View signals picked up in the last few minutes and quickly map them to an entity (Switch, Cover, Binary Sensor, or Light).
+- **Add device manually**: Manually type in the Protocol and ID (supports custom naming, light dimming styles, and cover direction inversion).
+- **Modify device ID**: Rename or remap an existing device's RFLink ID.
 - **Remove device**: Delete an existing device from the integration.
 
 ---

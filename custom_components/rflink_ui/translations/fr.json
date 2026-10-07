@@ -79,6 +79,12 @@
         "data": {
           "device_type": "Type d'appareil"
         }
+      },
+      "cover_options": {
+        "title": "Options du volet",
+        "data": {
+          "inverted": "Inverser le sens ouverture/fermeture"
+        }
       }
     },
     "error": {

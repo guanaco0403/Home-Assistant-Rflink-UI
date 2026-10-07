@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-import serial_asyncio
+import serialx
 from dataclasses import dataclass
 
 from collections import deque
@@ -21,6 +21,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.COVER,
 ]
 
 
@@ -77,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         | set(entry.options.get("sensors", {}).keys())
         | set(entry.options.get("binary_sensors", {}).keys())
         | set(entry.options.get("lights", {}).keys())
+        | set(entry.options.get("covers", {}).keys())
     )
 
     for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
@@ -125,7 +127,7 @@ async def _async_connection_loop(hass: HomeAssistant, entry: ConfigEntry) -> Non
             break
 
         try:
-            reader, writer = await serial_asyncio.open_serial_connection(
+            reader, writer = await serialx.open_serial_connection(
                 url=port, baudrate=baudrate
             )
             _LOGGER.info("Connected to RFLink on %s", port)
@@ -207,10 +209,13 @@ def _process_packet(hass: HomeAssistant, entry_id: str, decoded_line: str) -> No
 
         raw_device_id = None
         if "CMD" in data_dict:
-            # It's a switch
+            # RFLink uses CMD=UP/DOWN/STOP for covers such as Somfy RTS.
+            # These commands are unambiguous for a cover and should be
+            # discovered as such instead of as a switch.
             switch = data_dict.get("SWITCH", "0")
             full_device_id = f"{protocol}_{device_id}_{switch}"
-            device_type = "switch"
+            cmd = data_dict.get("CMD", "").upper()
+            device_type = "cover" if cmd in {"UP", "DOWN", "STOP"} else "switch"
         else:
             # It's a sensor
             device_type = "sensor"

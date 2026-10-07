@@ -79,6 +79,12 @@
         "data": {
           "device_type": "Device Type"
         }
+      },
+      "cover_options": {
+        "title": "Cover Options",
+        "data": {
+          "inverted": "Invert open/close direction"
+        }
       }
     },
     "error": {

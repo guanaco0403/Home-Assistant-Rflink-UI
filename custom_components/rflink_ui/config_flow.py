@@ -3,8 +3,7 @@
 from typing import Any
 
 import glob
-import serial
-import serial.tools.list_ports
+import serialx
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,7 +45,7 @@ class RFLinkTransmitterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=f"RFLink ({port})", data=user_input
                 )
 
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await self.hass.async_add_executor_job(serialx.list_serial_ports)
         port_list = [port.device for port in ports]
 
         def _get_by_id_ports() -> list[str]:
@@ -95,7 +94,7 @@ class RFLinkTransmitterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _test_serial_port(self, port: str) -> None:
         """Test if the serial port can be opened."""
-        with serial.serial_for_url(port, 57600, timeout=1):
+        with serialx.serial_for_url(port, 57600, timeout=1):
             pass
 
 
@@ -109,6 +108,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         self.options["sensors"] = dict(self.options.get("sensors", {}))
         self.options["binary_sensors"] = dict(self.options.get("binary_sensors", {}))
         self.options["lights"] = dict(self.options.get("lights", {}))
+        self.options["covers"] = dict(self.options.get("covers", {}))
         self._temp_device_id = None
         self._temp_name = None
 
@@ -152,6 +152,12 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                                 device_type = info["type"]
                                 break
 
+                    if device_type == "cover":
+                        self.options["covers"][selection] = {
+                            "name": name,
+                            "inverted": False,
+                        }
+                        return self.async_create_entry(title="", data=self.options)
                     if device_type == "switch":
                         return await self.async_step_select_type()
                     else:
@@ -170,12 +176,14 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             configured_sensors = self.options.get("sensors", {})
             configured_binary_sensors = self.options.get("binary_sensors", {})
             configured_lights = self.options.get("lights", {})
+            configured_covers = self.options.get("covers", {})
             for dev_id, info in data.recent_unknown_devices:
                 if (
                     dev_id not in configured_switches
                     and dev_id not in configured_sensors
                     and dev_id not in configured_binary_sensors
                     and dev_id not in configured_lights
+                    and dev_id not in configured_covers
                 ):
                     has_devices = True
                     devices_dict[dev_id] = dev_id
@@ -207,13 +215,15 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_binary_sensor_options()
             elif dev_type == "Light":
                 return await self.async_step_light_options()
+            elif dev_type == "Cover":
+                return await self.async_step_cover_options()
 
         return self.async_show_form(
             step_id="select_type",
             data_schema=vol.Schema(
                 {
                     vol.Required("device_type", default="Switch"): vol.In(
-                        ["Switch", "Binary Sensor", "Light"]
+                        ["Switch", "Binary Sensor", "Light", "Cover"]
                     ),
                 }
             ),
@@ -239,6 +249,10 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 self._temp_device_id = dev_id
                 self._temp_name = name
                 return await self.async_step_light_options()
+            elif dev_type == "Cover":
+                self._temp_device_id = dev_id
+                self._temp_name = name
+                return await self.async_step_cover_options()
             else:
                 self.options["sensors"][dev_id] = name
                 return self.async_create_entry(title="", data=self.options)
@@ -248,7 +262,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required("device_type", default="Switch"): vol.In(
-                        ["Switch", "Sensor", "Binary Sensor", "Light"]
+                        ["Switch", "Sensor", "Binary Sensor", "Light", "Cover"]
                     ),
                     vol.Required("device_id"): str,
                     vol.Required("name"): str,
@@ -348,6 +362,26 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
+    async def async_step_cover_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Configure cover-specific options."""
+        if user_input is not None:
+            self.options["covers"][self._temp_device_id] = {
+                "name": self._temp_name,
+                "inverted": bool(user_input.get("inverted", False)),
+            }
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="cover_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("inverted", default=False): bool,
+                }
+            ),
+        )
+
     async def async_step_modify(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -356,6 +390,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_sensors = self.options.get("sensors", {})
         configured_binary_sensors = self.options.get("binary_sensors", {})
         configured_lights = self.options.get("lights", {})
+        configured_covers = self.options.get("covers", {})
 
         all_devices = {}
         for dev_id, name in configured_switches.items():
@@ -366,6 +401,9 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         for dev_id, config in configured_lights.items():
             name = config.get("name") if isinstance(config, dict) else config
             all_devices[f"[Light] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, config in configured_covers.items():
+            name = config.get("name") if isinstance(config, dict) else config
+            all_devices[f"[Cover] {dev_id}"] = f"{name} ({dev_id})"
         for dev_id, name in configured_sensors.items():
             all_devices[f"[Sensor] {dev_id}"] = f"{name} ({dev_id})"
 
@@ -405,6 +443,12 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 if config:
                     self.options["lights"][new_dev_id] = config
                     device_type = "light"
+            elif selection.startswith("[Cover] "):
+                old_dev_id = selection.replace("[Cover] ", "")
+                config = self.options["covers"].pop(old_dev_id, None)
+                if config:
+                    self.options["covers"][new_dev_id] = config
+                    device_type = "cover"
             elif selection.startswith("[Sensor] "):
                 old_dev_id = selection.replace("[Sensor] ", "")
                 name = self.options["sensors"].pop(old_dev_id, None)
@@ -451,6 +495,16 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
                         ent_reg.async_update_entity(
                             ent_entry, new_unique_id=new_unique_id
                         )
+                elif device_type == "cover":
+                    old_unique_id = f"rflink_cover_{old_dev_id}"
+                    new_unique_id = f"rflink_cover_{new_dev_id}"
+                    ent_entry = ent_reg.async_get_entity_id(
+                        "cover", DOMAIN, old_unique_id
+                    )
+                    if ent_entry:
+                        ent_reg.async_update_entity(
+                            ent_entry, new_unique_id=new_unique_id
+                        )
                 else:
                     # For sensors: temperature, humidity, battery, total_rain
                     for s_type in ["temperature", "humidity", "battery", "total_rain"]:
@@ -485,6 +539,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         configured_sensors = self.options.get("sensors", {})
         configured_binary_sensors = self.options.get("binary_sensors", {})
         configured_lights = self.options.get("lights", {})
+        configured_covers = self.options.get("covers", {})
 
         all_devices = {}
         for dev_id, name in configured_switches.items():
@@ -495,6 +550,9 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
         for dev_id, config in configured_lights.items():
             name = config.get("name") if isinstance(config, dict) else config
             all_devices[f"[Light] {dev_id}"] = f"{name} ({dev_id})"
+        for dev_id, config in configured_covers.items():
+            name = config.get("name") if isinstance(config, dict) else config
+            all_devices[f"[Cover] {dev_id}"] = f"{name} ({dev_id})"
         for dev_id, name in configured_sensors.items():
             all_devices[f"[Sensor] {dev_id}"] = f"{name} ({dev_id})"
 
@@ -512,6 +570,9 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             elif selection.startswith("[Light] "):
                 dev_id = selection.replace("[Light] ", "")
                 self.options["lights"].pop(dev_id, None)
+            elif selection.startswith("[Cover] "):
+                dev_id = selection.replace("[Cover] ", "")
+                self.options["covers"].pop(dev_id, None)
             elif selection.startswith("[Sensor] "):
                 dev_id = selection.replace("[Sensor] ", "")
                 self.options["sensors"].pop(dev_id, None)

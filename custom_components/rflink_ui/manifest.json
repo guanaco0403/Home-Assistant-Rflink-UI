@@ -6,13 +6,13 @@
   ],
   "config_flow": true,
   "after_dependencies": [
-    "radio_frequency"
+    "radio_frequency",
+    "usb"
   ],
   "documentation": "https://github.com/guanaco0403/Home-Assistant-Rflink-UI",
   "iot_class": "local_push",
   "requirements": [
-    "pyserial-asyncio-fast>=0.11",
-    "pyserial>=3.5"
+    "serialx==1.10.0"
   ],
-  "version": "1.2.2"
+  "version": "1.2.3"
 }

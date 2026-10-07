@@ -79,6 +79,50 @@ async def test_options_flow_manual(hass, mock_serial_connection):
     assert entry.options["switches"] == {"Kaku_123_1": "My Switch"}
 
 
+async def test_options_flow_manual_cover(hass, mock_serial_connection):
+    """Test adding a Cover manually via options flow including inverted setting."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"port": "COM1"},
+        options={"switches": {}, "sensors": {}, "covers": {}},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == "menu"
+    assert result["step_id"] == "init"
+
+    # Select add_manual step
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_manual"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_manual"
+
+    # Add a Cover manually
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_type": "Cover",
+            "device_id": "RTS_123_0",
+            "name": "My Cover",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "cover_options"
+
+    # Configure cover options (inverted = True)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"inverted": True},
+    )
+    assert result["type"] == "create_entry"
+    assert entry.options["covers"] == {
+        "RTS_123_0": {"name": "My Cover", "inverted": True}
+    }
+
+
 async def test_options_flow_add_learned(hass, mock_serial_connection):
     """Test adding a recently seen/learned device via options flow."""
     entry = MockConfigEntry(
@@ -94,6 +138,7 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
         [
             ("Kaku_learned_1", {"type": "switch", "data": {}}),
             ("Oregon_learned_2", {"type": "sensor", "data": {}}),
+            ("RTS_learned_3", {"type": "cover", "data": {}}),
         ]
     )
     hass.data[DOMAIN] = {entry.entry_id: mock_data}
@@ -146,6 +191,29 @@ async def test_options_flow_add_learned(hass, mock_serial_connection):
     assert result["type"] == "create_entry"
     assert entry.options["sensors"] == {"Oregon_learned_2": "Learned Sensor"}
 
+    # 3. Test adding a Cover (directly added from learned devices)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_learned"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_learned"
+
+    # Submit selection of cover
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_id": "RTS_learned_3",
+            "name": "Learned Cover",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert entry.options["covers"]["RTS_learned_3"] == {
+        "name": "Learned Cover",
+        "inverted": False,
+    }
+
 
 async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     """Test modifying and removing a device in options flow."""
@@ -155,11 +223,12 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
         options={
             "switches": {"Kaku_old_1": "Old Switch"},
             "sensors": {"Oregon_old_2": "Old Sensor"},
+            "covers": {"RTS_old_3": {"name": "Old Cover", "inverted": False}},
         },
     )
     entry.add_to_hass(hass)
 
-    # 1. Test Modify
+    # 1. Test Modify Switch
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -180,7 +249,31 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     assert "Kaku_old_1" not in entry.options["switches"]
     assert entry.options["switches"]["Kaku_new_1"] == "Old Switch"
 
-    # 2. Test Remove
+    # 2. Test Modify Cover
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "modify"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "modify"
+
+    # Modify the ID of the cover
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_id": "[Cover] RTS_old_3",
+            "new_device_id": "RTS_new_3",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert "RTS_old_3" not in entry.options["covers"]
+    assert entry.options["covers"]["RTS_new_3"] == {
+        "name": "Old Cover",
+        "inverted": False,
+    }
+
+    # 3. Test Remove Sensor
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -198,6 +291,25 @@ async def test_options_flow_modify_and_remove(hass, mock_serial_connection):
     )
     assert result["type"] == "create_entry"
     assert "Oregon_old_2" not in entry.options["sensors"]
+
+    # 4. Test Remove Cover
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "remove"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "remove"
+
+    # Remove the cover
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "device_id": "[Cover] RTS_new_3",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert "RTS_new_3" not in entry.options["covers"]
 
 
 async def test_config_flow_with_by_id_ports(hass, mock_serial_connection):

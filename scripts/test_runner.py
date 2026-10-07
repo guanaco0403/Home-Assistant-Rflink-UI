@@ -79,6 +79,7 @@ def setup_venv(ha_version: str, force_clean: bool = False):
         "pytest-homeassistant-custom-component",
         "pyserial-asyncio-fast>=0.11",
         "pyserial>=3.5",
+        "serialx==1.10.0",
         "rf-protocols",
     ]
     print(f"[Test Runner] Pip requirements to install: {', '.join(requirements)}")

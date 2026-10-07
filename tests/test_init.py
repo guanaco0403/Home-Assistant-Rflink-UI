@@ -23,7 +23,7 @@ async def test_setup_unload_entry(hass, mock_serial_connection):
     assert entry.state is ConfigEntryState.LOADED
     data = hass.data[DOMAIN][entry.entry_id]
     assert isinstance(data, RFLinkData)
-    
+
     # Wait a small amount of time for the connection loop to run open_serial_connection
     await asyncio.sleep(0.01)
     assert data.is_connected is True
@@ -50,12 +50,12 @@ async def test_serial_read_and_dispatch(hass, mock_serial_connection):
     await asyncio.sleep(0.01)
 
     data = hass.data[DOMAIN][entry.entry_id]
-    
+
     # Verify dispatcher is called when we write to the mock reader
     # We will simulate receiving a switch command from RFLink
     # Message: 20;01;Kaku;ID=41;SWITCH=1;CMD=ON;
     mock_serial_connection["reader"].feed_line("20;01;Kaku;ID=41;SWITCH=1;CMD=ON;")
-    
+
     # Let the serial reader task process the line
     await asyncio.sleep(0.01)
 
@@ -68,15 +68,28 @@ async def test_serial_read_and_dispatch(hass, mock_serial_connection):
 
     # Simulate receiving sensor data
     # Message: 20;3A;Oregon TempHygro;ID=0A4C;TEMP=00ba;HUM=40;BAT=OK;
-    mock_serial_connection["reader"].feed_line("20;3A;Oregon TempHygro;ID=0A4C;TEMP=00ba;HUM=40;BAT=OK;")
+    mock_serial_connection["reader"].feed_line(
+        "20;3A;Oregon TempHygro;ID=0A4C;TEMP=00ba;HUM=40;BAT=OK;"
+    )
     await asyncio.sleep(0.01)
 
     assert len(data.recent_unknown_devices) == 2
-    device_id, info = data.recent_unknown_devices[1] # most recent is at index 1
+    device_id, info = data.recent_unknown_devices[1]  # most recent is at index 1
     assert device_id == "Oregon TempHygro_0A4C"
     assert info["type"] == "sensor"
     assert info["data"]["TEMP"] == "00ba"
     assert info["data"]["HUM"] == "40"
+
+    # Simulate receiving cover commands (CMD=UP, DOWN, STOP)
+    # Message: 20;3B;RTS;ID=0A4B;SWITCH=0;CMD=UP;
+    mock_serial_connection["reader"].feed_line("20;3B;RTS;ID=0A4B;SWITCH=0;CMD=UP;")
+    await asyncio.sleep(0.01)
+
+    assert len(data.recent_unknown_devices) == 3
+    device_id, info = data.recent_unknown_devices[2]
+    assert device_id == "RTS_0A4B_0"
+    assert info["type"] == "cover"
+    assert info["data"]["CMD"] == "UP"
 
     # Unload
     assert await hass.config_entries.async_unload(entry.entry_id)

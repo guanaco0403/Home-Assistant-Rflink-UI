@@ -262,7 +262,7 @@ class RFLinkOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required("device_type", default="Switch"): vol.In(
-                        ["Switch", "Sensor", "Binary Sensor", "Light"]
+                        ["Switch", "Sensor", "Binary Sensor", "Light", "Cover"]
                     ),
                     vol.Required("device_id"): str,
                     vol.Required("name"): str,

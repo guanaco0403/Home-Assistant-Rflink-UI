@@ -89,6 +89,7 @@ class RFLinkBinarySensor(BinarySensorEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_force_update = True
 
     def __init__(self, entry_id: str, device_id: str, config: dict | str) -> None:
         """Initialize the binary sensor."""

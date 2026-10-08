@@ -101,9 +101,12 @@ class RFLinkLight(LightEntity, RestoreEntity):
             self._attr_is_on = state.state == STATE_ON
             if (
                 self._light_type in ["dimmable", "hybrid"]
-                and ATTR_BRIGHTNESS in state.attributes
+                and state.attributes.get(ATTR_BRIGHTNESS) is not None
             ):
-                self._attr_brightness = int(state.attributes[ATTR_BRIGHTNESS])
+                try:
+                    self._attr_brightness = int(state.attributes[ATTR_BRIGHTNESS])
+                except (ValueError, TypeError):
+                    self._attr_brightness = 255
 
         self.async_on_remove(
             async_dispatcher_connect(

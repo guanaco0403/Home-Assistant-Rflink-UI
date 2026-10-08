@@ -1,6 +1,8 @@
 import asyncio
+from unittest.mock import patch
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import State
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.rflink_ui import DOMAIN
@@ -184,3 +186,36 @@ async def test_light_setup_and_control(hass, mock_serial_connection):
     await hass.async_block_till_done()
     state = hass.states.get("light.living_room_livolo")
     assert state.state == STATE_ON
+
+
+async def test_light_restore_state_with_none_brightness(hass, mock_serial_connection):
+    """Test restoring light state when brightness attribute is None (e.g. turned off)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"port": "COM1"},
+        options={
+            "lights": {
+                "Unitec_1a4a_4": {"name": "Living Room Dimmer", "type": "dimmable"},
+            },
+            "switches": {},
+            "sensors": {},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=State(
+            "light.living_room_dimmer",
+            STATE_OFF,
+            {"brightness": None, "friendly_name": "Living Room Dimmer"},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await asyncio.sleep(0.01)
+
+    state = hass.states.get("light.living_room_dimmer")
+    assert state is not None
+    assert state.state == STATE_OFF
+

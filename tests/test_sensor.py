@@ -153,3 +153,47 @@ async def test_rain_sensor_updates(hass, mock_serial_connection):
     assert rain_state.attributes.get("battery") == "OK"
 
 
+async def test_sensor_force_update_same_value(hass, mock_serial_connection):
+    """Test that last_updated changes even if sensor value is unchanged."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"port": "COM1"},
+        options={
+            "switches": {},
+            "sensors": {"Oregon_0A4C": "Garden Sensor"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    from homeassistant.helpers.dispatcher import dispatcher_send
+
+    dispatcher_send(
+        hass,
+        "rflink_update_Oregon_0A4C",
+        {"TEMP": "00ba", "BAT": "OK"},
+    )
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("sensor.garden_sensor_temperature")
+    assert state1.state == "18.6"
+    last_updated1 = state1.last_updated
+
+    await asyncio.sleep(0.01)
+
+    # Dispatch same value again
+    dispatcher_send(
+        hass,
+        "rflink_update_Oregon_0A4C",
+        {"TEMP": "00ba", "BAT": "OK"},
+    )
+    await hass.async_block_till_done()
+
+    state2 = hass.states.get("sensor.garden_sensor_temperature")
+    assert state2.state == "18.6"
+    assert state2.last_updated > last_updated1
+
+
+
